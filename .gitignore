@@ -1,0 +1,31 @@
+# Root .gitignore — applies to the entire monorepo
+#
+# Why this file exists:
+#   Git should only track source code, not:
+#   - Automatically generated files (node_modules, __pycache__)
+#   - Secrets (.env files with passwords/API keys)
+#   - OS-specific junk (.DS_Store on Mac, Thumbs.db on Windows)
+#   - Editor configs that are personal preferences
+#   - AI model weight files (can be gigabytes large)
+
+# ── OS Files ──────────────────────────────────────────────────────────────────
+.DS_Store          # Mac Finder metadata
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db          # Windows thumbnail cache
+ehthumbs.db
+Desktop.ini
+
+# ── IDE / Editor ──────────────────────────────────────────────────────────────
+.vscode/           # VS Code workspace settings (personal preference)
+.idea/             # JetBrains IDE config
+*.swp              # Vim swap files
+*.swo
+*.orig             # Merge conflict originals
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*

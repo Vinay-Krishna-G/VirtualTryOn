@@ -1,0 +1,42 @@
+# ai-service/.gitignore
+#
+# Files the Python AI service should NOT commit to git.
+
+# ── Python Cache ──────────────────────────────────────────────────────────────
+# Python creates these automatically when you import a module.
+# They're bytecode compilations — auto-regenerated, no need to track.
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ── Virtual Environments ──────────────────────────────────────────────────────
+# A virtual environment is an isolated Python installation.
+# Each developer creates their own — they must not be shared via git.
+.venv/
+venv/
+env/
+ENV/
+
+# ── Environment Variables ─────────────────────────────────────────────────────
+.env
+.env.local
+*.env
+
+# ── AI Model Weights ──────────────────────────────────────────────────────────
+# AI model files (weights) are often gigabytes in size.
+# They should NEVER be committed to git.
+# Developers download them separately via the model's instructions.
+models/
+*.pt           # PyTorch model weights
+*.pth          # PyTorch checkpoint files
+*.bin          # HuggingFace model binary files
+*.safetensors  # HuggingFace safe format weights
+*.ckpt         # Checkpoint files (common in diffusion models)
+
+# ── Temporary / Output Files ──────────────────────────────────────────────────
+# Generated images during testing — don't commit test output
+temp/
+output/
+*.generated.png
+*.generated.jpg
