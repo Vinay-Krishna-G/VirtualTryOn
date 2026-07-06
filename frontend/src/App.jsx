@@ -22,31 +22,41 @@
  *     └── BottomNavigation (persistent, bottom on mobile)
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "./components/layout/Header";
 import BottomNavigation from "./components/layout/BottomNavigation";
 import Home from "./pages/Home";
 import ProductDetails from "./pages/ProductDetails";
-import MerchantDashboard from "./pages/MerchantDashboard";
-import { products, getCategories } from "./data/products";
+import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import { getProducts, getCategories } from "./services/productService";
 
 export default function App() {
-  /**
-   * currentPage
-   *   Controls which page component is rendered.
-   *   Values: "home" | "product" | "dashboard"
-   */
   const [currentPage, setCurrentPage] = useState("home");
-
-  /**
-   * selectedProduct
-   *   The product object the user clicked on.
-   *   Set when navigating to "product" page.
-   *   Null at all other times.
-   */
   const [selectedProduct, setSelectedProduct] = useState(null);
+  
+  // Data state
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const categories = getCategories();
+  // Fetch data on mount
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [productsData, categoriesData] = await Promise.all([
+          getProducts(),
+          getCategories(),
+        ]);
+        setProducts(productsData);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   // ── Navigation handlers ────────────────────────────────────────────────────
 
@@ -94,13 +104,19 @@ export default function App() {
 
       {/* Page content — switches based on currentPage */}
       <main>
-        {currentPage === "home" && (
-          <Home
-            products={products}
-            categories={categories}
-            onSelectProduct={handleSelectProduct}
-          />
-        )}
+        {isLoading ? (
+          <div style={{ padding: "4rem 2rem", textAlign: "center", color: "var(--color-text-light)" }}>
+            Loading store experience...
+          </div>
+        ) : (
+          <>
+            {currentPage === "home" && (
+              <Home
+                products={products}
+                categories={categories}
+                onSelectProduct={handleSelectProduct}
+              />
+            )}
 
         {currentPage === "product" && selectedProduct && (
           <ProductDetails
@@ -110,10 +126,12 @@ export default function App() {
         )}
 
         {currentPage === "dashboard" && (
-          <MerchantDashboard
+          <AnalyticsDashboard
             products={products}
             onBack={() => handleNavigateHome("home")}
           />
+        )}
+          </>
         )}
       </main>
 

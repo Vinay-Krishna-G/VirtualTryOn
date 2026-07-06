@@ -18,7 +18,7 @@
  *   - A dashboard-style analytics page for shop owners
  */
 
-import { formatPrice } from "../data/products";
+import { formatPrice } from "../mock/products";
 
 // ── Hardcoded demo stats ──────────────────────────────────────
 // These numbers are intentionally chosen to feel realistic.
@@ -76,7 +76,7 @@ export default function MerchantDashboard({ products, onBack }) {
                 letterSpacing: "-0.02em",
               }}
             >
-              📊 Merchant Dashboard
+              📊 AI Retail Analytics
             </h1>
             <p style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
               Thursday, 6 July 2026 — Demo Data
@@ -200,6 +200,51 @@ export default function MerchantDashboard({ products, onBack }) {
           </div>
         </div>
 
+        {/* ── Funnel Chart: Conversion Flow ── */}
+        <div className="card" style={{ padding: "1.25rem" }}>
+          <p style={{ fontWeight: "700", fontSize: "0.95rem", marginBottom: "0.25rem", color: "var(--color-text)" }}>
+            Try-On Conversion Funnel
+          </p>
+          <p style={{ fontSize: "0.75rem", color: "var(--color-text-light)", marginBottom: "1.25rem" }}>
+            Customer journey from product view to purchase
+          </p>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {/* Step 1 */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", marginBottom: "4px" }}>
+                <span style={{ fontWeight: "600", color: "var(--color-text)" }}>Products Viewed</span>
+                <span style={{ fontWeight: "700" }}>100% (14,290)</span>
+              </div>
+              <div style={{ height: "16px", background: "var(--color-surface-2)", borderRadius: "4px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: "100%", background: "#e2e8f0" }} />
+              </div>
+            </div>
+            
+            {/* Step 2 */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", marginBottom: "4px", marginTop: "0.5rem" }}>
+                <span style={{ fontWeight: "600", color: "var(--color-text)" }}>Products Tried On</span>
+                <span style={{ fontWeight: "700", color: "var(--color-brand)" }}>58% (8,241)</span>
+              </div>
+              <div style={{ height: "16px", background: "var(--color-surface-2)", borderRadius: "4px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: "58%", background: "rgba(13,115,119,0.4)" }} />
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", marginBottom: "4px", marginTop: "0.5rem" }}>
+                <span style={{ fontWeight: "600", color: "var(--color-text)" }}>Purchased</span>
+                <span style={{ fontWeight: "700", color: "var(--color-success)" }}>20% (2,801)</span>
+              </div>
+              <div style={{ height: "16px", background: "var(--color-surface-2)", borderRadius: "4px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: "20%", background: "var(--color-success)" }} />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* ── Top Products by Try-On Usage ── */}
         <div className="card" style={{ padding: "1.25rem" }}>
           <p style={{ fontWeight: "700", fontSize: "0.95rem", marginBottom: "0.25rem", color: "var(--color-text)" }}>
@@ -302,7 +347,56 @@ export default function MerchantDashboard({ products, onBack }) {
             Reduce returns. Increase confidence. Let every customer try before they buy — without leaving home.
           </p>
         </div>
+
+        {/* ── AI Platform Vision Modules ── */}
+        <div className="card" style={{ padding: "1.25rem", marginBottom: "2rem" }}>
+          <p style={{ fontWeight: "700", fontSize: "0.95rem", marginBottom: "0.25rem", color: "var(--color-text)" }}>
+            AI Commerce Platform Modules
+          </p>
+          <p style={{ fontSize: "0.75rem", color: "var(--color-text-light)", marginBottom: "1.25rem" }}>
+            Extend your store's capabilities with our upcoming intelligence modules.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div>
+              <p style={{ fontSize: "0.7rem", fontWeight: "800", textTransform: "uppercase", color: "var(--color-brand)", marginBottom: "0.5rem", letterSpacing: "0.05em" }}>
+                Available Today
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.75rem", background: "var(--color-brand-light)", borderRadius: "var(--radius-md)", border: "1px solid rgba(13,115,119,0.2)" }}>
+                <span style={{ fontSize: "1.2rem" }}>✨</span>
+                <div>
+                  <p style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--color-brand-dark)" }}>AI Try-On (Virtual Dressing Room)</p>
+                  <p style={{ fontSize: "0.75rem", color: "var(--color-brand)" }}>Active on your storefront</p>
+                </div>
+                <span style={{ marginLeft: "auto", fontSize: "0.75rem", fontWeight: "700", color: "var(--color-brand)" }}>✓ LIVE</span>
+              </div>
+            </div>
+
+            <div>
+              <p style={{ fontSize: "0.7rem", fontWeight: "800", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: "0.5rem", letterSpacing: "0.05em" }}>
+                Coming Soon
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                {[
+                  { icon: "📏", title: "AI Size Recommendation", desc: "Reduce returns by predicting perfect fits." },
+                  { icon: "👔", title: "AI Style Assistant", desc: "Personalized chat-based styling advice." },
+                  { icon: "👗", title: "AI Outfit Matching", desc: "Automatically suggest \"Complete The Look\" items." },
+                  { icon: "💍", title: "AI Wedding Stylist", desc: "Curated multi-outfit planner for events." },
+                ].map((mod, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", background: "var(--color-surface-2)", borderRadius: "var(--radius-md)", opacity: 0.8 }}>
+                    <span style={{ fontSize: "1.2rem", opacity: 0.7 }}>{mod.icon}</span>
+                    <div>
+                      <p style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--color-text)" }}>{mod.title}</p>
+                      <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>{mod.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
 
       {/* Responsive stats grid */}
       <style>{`

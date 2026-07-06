@@ -17,7 +17,7 @@
  *   - A tappable product card (navigates to product details)
  */
 
-import { formatPrice } from "../../data/products";
+import { formatPrice } from "../../mock/products";
 
 export default function ProductCard({ product, onSelect }) {
   return (

@@ -25,10 +25,10 @@
  */
 
 import { useState } from "react";
-import { formatPrice } from "../data/products";
+import { formatPrice } from "../mock/products";
 import TryOnModal from "../components/tryon/TryOnModal";
 import GeneratedResultModal from "../components/tryon/GeneratedResultModal";
-import axios from "axios";
+import { generateTryOn } from "../services/tryonService";
 
 export default function ProductDetails({ product, onBack }) {
   // Which color variant is selected
@@ -69,19 +69,8 @@ export default function ProductDetails({ product, onBack }) {
     setUploadedPreviewUrl(preview);
 
     try {
-      // Build multipart form data with person image + product id
-      const formData = new FormData();
-      formData.append("personImage", file);
-      formData.append("productId", product.id);
-
-      // POST to Node backend — Vite proxy routes this to localhost:3001
-      const response = await axios.post("/api/generate", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        responseType: "blob",   // Response is binary image data
-      });
-
-      // Convert the binary response to a displayable URL
-      const blobUrl = URL.createObjectURL(response.data);
+      // Call our service layer to encapsulate the API logic
+      const blobUrl = await generateTryOn(file, product.id);
       setResultImageUrl(blobUrl);
 
       // Close upload modal, open result modal
@@ -326,59 +315,92 @@ export default function ProductDetails({ product, onBack }) {
             </div>
           )}
 
-          {/* ── ✨ Try Before Buying Section — the hero feature ── */}
+          {/* ── ✨ AI Confidence Metric ── */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "1rem",
+              padding: "1rem",
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-md)",
+              marginBottom: "1.25rem",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+            }}
+          >
+            <div style={{ textAlign: "center", flexShrink: 0 }}>
+              <div style={{ color: "#f59e0b", fontSize: "1.2rem", letterSpacing: "2px", lineHeight: 1 }}>★★★★★</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--color-text)", marginTop: "0.2rem" }}>98%</div>
+            </div>
+            <div>
+              <p style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--color-text)", marginBottom: "0.2rem" }}>
+                AI Confidence Score
+              </p>
+              <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", lineHeight: 1.4 }}>
+                Customers who used AI Try On were more confident purchasing this product.
+              </p>
+            </div>
+          </div>
+
+          {/* ── ✨ Virtual Dressing Room Section ── */}
           <div
             style={{
               background: "linear-gradient(135deg, #fef3c7, #fff7ed)",
               border: "1.5px solid rgba(217,119,6,0.25)",
               borderRadius: "var(--radius-lg)",
-              padding: "1.25rem",
+              padding: "1.5rem",
               marginBottom: "1.25rem",
+              boxShadow: "0 4px 12px rgba(217,119,6,0.08)"
             }}
           >
             <p
               style={{
-                fontSize: "0.68rem",
+                fontSize: "0.75rem",
                 fontWeight: "800",
                 color: "var(--color-tryon)",
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
-                marginBottom: "0.4rem",
+                marginBottom: "0.5rem",
               }}
             >
-              ✨ Try Before Buying
+              Virtual Dressing Room
             </p>
             <p
               style={{
-                fontSize: "1rem",
+                fontSize: "1.1rem",
                 fontWeight: "700",
                 color: "var(--color-text)",
-                marginBottom: "0.35rem",
+                marginBottom: "0.75rem",
                 lineHeight: "1.3",
               }}
             >
-              See yourself wearing this {product.category.replace(/s$/, "").toLowerCase()}
+              See yourself wearing this {product.category.replace(/s$/, "").toLowerCase()} before placing your order.
             </p>
-            <p
-              style={{
-                fontSize: "0.8rem",
-                color: "var(--color-text-muted)",
-                marginBottom: "1rem",
-                lineHeight: "1.5",
-              }}
-            >
-              Upload your full-body photo. Our AI will show you the result in seconds.
-            </p>
+            
+            <div style={{ marginBottom: "1.25rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+              {[
+                "Realistic visualization",
+                "Private & secure",
+                "Ready in seconds"
+              ].map(benefit => (
+                <div key={benefit} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ color: "var(--color-tryon)", fontSize: "0.9rem" }}>✓</span>
+                  <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", fontWeight: "500" }}>{benefit}</span>
+                </div>
+              ))}
+            </div>
 
             <button
               onClick={() => setIsTryOnOpen(true)}
               className="btn-tryon"
               id="try-on-btn"
-              style={{ width: "100%", padding: "0.9rem" }}
+              style={{ width: "100%", padding: "1rem", fontSize: "1rem", boxShadow: "0 4px 12px rgba(217,119,6,0.2)" }}
             >
-              ✨ Try On Now
+              ✨ Try It On
             </button>
           </div>
+
 
           {/* ── Cart + Buy buttons ── */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "1.25rem" }}>
@@ -459,6 +481,46 @@ export default function ProductDetails({ product, onBack }) {
           </div>
         </div>
       </div>
+      
+      {/* ── Product Discovery (Hardcoded Demo Rails) ── */}
+      <div style={{ maxWidth: "var(--max-width)", margin: "0 auto", padding: "2rem 1rem 4rem" }}>
+        
+        <div style={{ marginBottom: "3rem" }}>
+          <h2 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--color-text)", marginBottom: "1rem" }}>
+            Complete The Look
+          </h2>
+          <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "1rem", margin: "0 -1rem", padding: "0 1rem 1rem" }}>
+            {[1, 2, 3].map(i => (
+              <div key={`ctl-${i}`} style={{ minWidth: "140px", flex: "0 0 auto", opacity: 0.7, filter: "grayscale(20%)" }}>
+                <div style={{ width: "100%", aspectRatio: "3/4", background: "var(--color-surface-2)", borderRadius: "var(--radius-md)", marginBottom: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-light)", fontSize: "2rem" }}>
+                  {i === 1 ? "👜" : i === 2 ? "👠" : "💎"}
+                </div>
+                <div style={{ height: "12px", background: "var(--color-surface-2)", width: "80%", borderRadius: "2px", marginBottom: "4px" }} />
+                <div style={{ height: "10px", background: "var(--color-surface-2)", width: "40%", borderRadius: "2px" }} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--color-text)", marginBottom: "1rem" }}>
+            Recently Viewed
+          </h2>
+          <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "1rem", margin: "0 -1rem", padding: "0 1rem 1rem" }}>
+            {[1, 2].map(i => (
+              <div key={`rv-${i}`} style={{ minWidth: "140px", flex: "0 0 auto", opacity: 0.7 }}>
+                <div style={{ width: "100%", aspectRatio: "3/4", background: "var(--color-surface-2)", borderRadius: "var(--radius-md)", marginBottom: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-light)", fontSize: "2rem" }}>
+                  👗
+                </div>
+                <div style={{ height: "12px", background: "var(--color-surface-2)", width: "90%", borderRadius: "2px", marginBottom: "4px" }} />
+                <div style={{ height: "10px", background: "var(--color-surface-2)", width: "50%", borderRadius: "2px" }} />
+              </div>
+            ))}
+          </div>
+        </div>
+        
+      </div>
+
 
       {/* ── Modals (rendered on top of everything) ── */}
       {isTryOnOpen && (

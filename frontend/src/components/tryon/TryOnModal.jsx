@@ -124,7 +124,7 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
               }}
             />
             <h2 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-text)" }}>
-              ✨ Try On
+              Welcome to the Virtual Dressing Room
             </h2>
             <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
               {product.name}
