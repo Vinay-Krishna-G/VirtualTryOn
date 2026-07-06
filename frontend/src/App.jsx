@@ -105,8 +105,16 @@ export default function App() {
       {/* Page content — switches based on currentPage */}
       <main>
         {isLoading ? (
-          <div style={{ padding: "4rem 2rem", textAlign: "center", color: "var(--color-text-light)" }}>
-            Loading store experience...
+          <div className="page-container" style={{ paddingTop: "2rem" }}>
+            <div className="skeleton" style={{ height: "140px", marginBottom: "2rem" }}></div>
+            <div
+              className="product-grid"
+              style={{ display: "grid" }}
+            >
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="skeleton" style={{ height: "300px" }}></div>
+              ))}
+            </div>
           </div>
         ) : (
           <>

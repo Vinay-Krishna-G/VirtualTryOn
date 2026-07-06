@@ -253,6 +253,18 @@ button {
   animation: fadeInUp 0.35s ease forwards;
 }
 
+/* Skeleton loader */
+.skeleton {
+  background: #e2e8f0;
+  border-radius: var(--radius-md);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
 /* Loading spinner element */
 .spinner {
   width: 32px;
@@ -268,7 +280,7 @@ button {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.5);
-  z-index: 100;
+  z-index: 9998;
   animation: fadeIn 0.2s ease forwards;
   display: flex;
   align-items: flex-end;     /* Mobile: sheet from bottom */
@@ -282,6 +294,8 @@ button {
 
 /* Modal panel */
 .modal-panel {
+  position: relative;
+  z-index: 9999;
   background: var(--color-surface);
   width: 100%;
   max-width: 520px;

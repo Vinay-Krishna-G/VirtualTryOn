@@ -101,7 +101,7 @@ export default function ProductCard({ product, onSelect }) {
       </div>
 
       {/* ── Product Info ── */}
-      <div style={{ padding: "0.75rem" }}>
+      <div style={{ padding: "0.5rem" }}>
         {/* Brand */}
         <p
           style={{
@@ -109,8 +109,8 @@ export default function ProductCard({ product, onSelect }) {
             fontWeight: "600",
             color: "var(--color-text-light)",
             textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            marginBottom: "0.2rem",
+            letterSpacing: "0.04em",
+            marginBottom: "0.15rem",
           }}
         >
           {product.brand}
@@ -119,11 +119,11 @@ export default function ProductCard({ product, onSelect }) {
         {/* Product name */}
         <p
           style={{
-            fontSize: "0.875rem",
+            fontSize: "0.75rem",
             fontWeight: "600",
             color: "var(--color-text)",
-            lineHeight: "1.35",
-            marginBottom: "0.4rem",
+            lineHeight: "1.2",
+            marginBottom: "0.25rem",
             /* Clamp to 2 lines max */
             display: "-webkit-box",
             WebkitLineClamp: 2,
@@ -140,25 +140,25 @@ export default function ProductCard({ product, onSelect }) {
             display: "flex",
             alignItems: "center",
             gap: "4px",
-            marginBottom: "0.5rem",
+            marginBottom: "0.25rem",
           }}
         >
-          <span style={{ color: "#f59e0b", fontSize: "0.75rem" }}>★</span>
-          <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "var(--color-text)" }}>
+          <span style={{ color: "#f59e0b", fontSize: "0.65rem" }}>★</span>
+          <span style={{ fontSize: "0.65rem", fontWeight: "600", color: "var(--color-text)" }}>
             {product.rating}
           </span>
-          <span style={{ fontSize: "0.72rem", color: "var(--color-text-light)" }}>
+          <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
             ({product.reviewCount.toLocaleString("en-IN")})
           </span>
         </div>
 
-        {/* Pricing */}
-        <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexWrap: "wrap" }}>
-          <span className="price-current" style={{ fontSize: "1rem" }}>
+        {/* Price row */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "0.8rem", fontWeight: "800", color: "var(--color-text)" }}>
             {formatPrice(product.price)}
           </span>
           {product.originalPrice > product.price && (
-            <span className="price-original">
+            <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)", textDecoration: "line-through" }}>
               {formatPrice(product.originalPrice)}
             </span>
           )}

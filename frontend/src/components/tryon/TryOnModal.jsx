@@ -19,7 +19,8 @@
  *   - Modal overlay with photo upload and generate button
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export default function TryOnModal({ product, onClose, onGenerate, isGenerating }) {
   // The file the user selected
@@ -88,12 +89,30 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
     onGenerate(selectedFile);
   }
 
+  // Handle body scroll lock and ESC key
+  useEffect(() => {
+    // Lock scrolling on mount
+    document.body.style.overflow = "hidden";
+    
+    // ESC key to close
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      // Restore scrolling on unmount
+      document.body.style.overflow = "unset";
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
   // Close when clicking the backdrop
   function handleBackdropClick(e) {
     if (e.target === e.currentTarget) onClose();
   }
 
-  return (
+  const modalContent = (
     <div
       className="modal-backdrop"
       onClick={handleBackdropClick}
@@ -326,4 +345,6 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

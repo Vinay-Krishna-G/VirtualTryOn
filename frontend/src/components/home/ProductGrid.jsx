@@ -75,13 +75,8 @@ export default function ProductGrid({
 
   return (
     <div
-      style={{
-        display: "grid",
-        /* Mobile: 2 columns. Tablet: 3. Desktop: 4. */
-        gridTemplateColumns: "repeat(2, 1fr)",
-        gap: "0.75rem",
-      }}
       className="product-grid"
+      style={{ display: "grid" }}
     >
       {filteredProducts.map((product, index) => (
         <div
@@ -96,10 +91,21 @@ export default function ProductGrid({
 
       {/* Responsive columns via inline style */}
       <style>{`
-        @media (min-width: 640px) {
+        /* Mobile (default) */
+        .product-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0.5rem;
+        }
+        /* Tablet */
+        @media (min-width: 768px) {
+          .product-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+        }
+        /* Laptop */
+        @media (min-width: 1024px) {
           .product-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
         }
-        @media (min-width: 1024px) {
+        /* Desktop */
+        @media (min-width: 1280px) {
           .product-grid { grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
         }
       `}</style>

@@ -17,6 +17,9 @@
  *   - Modal showing before/after comparison with action buttons
  */
 
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+
 export default function GeneratedResultModal({
   product,
   originalImageUrl,
@@ -44,11 +47,29 @@ export default function GeneratedResultModal({
     document.body.removeChild(link);
   }
 
+  // Handle body scroll lock and ESC key
+  useEffect(() => {
+    // Lock scrolling on mount
+    document.body.style.overflow = "hidden";
+    
+    // ESC key to close
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      // Restore scrolling on unmount
+      document.body.style.overflow = "unset";
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
   function handleBackdropClick(e) {
     if (e.target === e.currentTarget) onClose();
   }
 
-  return (
+  const modalContent = (
     <div
       className="modal-backdrop"
       onClick={handleBackdropClick}
@@ -226,4 +247,6 @@ export default function GeneratedResultModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

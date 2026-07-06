@@ -20,8 +20,8 @@ export default function HeroBanner({ onExplore }) {
         overflow: "hidden",
         position: "relative",
         background: "linear-gradient(135deg, #0d7377 0%, #14b8b8 50%, #0f766e 100%)",
-        padding: "2.5rem 2rem",
-        minHeight: "200px",
+        padding: "1.5rem",
+        minHeight: "140px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -61,13 +61,14 @@ export default function HeroBanner({ onExplore }) {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "5px",
+              gap: "4px",
               background: "rgba(255,255,255,0.2)",
+              padding: "0.2rem 0.6rem",
+              borderRadius: "100px",
+              fontSize: "0.65rem",
+              fontWeight: "600",
               color: "#fff",
-              padding: "0.25rem 0.75rem",
-              borderRadius: "var(--radius-full)",
-              fontSize: "0.75rem",
-              fontWeight: "700",
+              textTransform: "uppercase",
               letterSpacing: "0.04em",
             }}
           >
@@ -76,27 +77,29 @@ export default function HeroBanner({ onExplore }) {
         </div>
 
         {/* Headline */}
-        <h2
+        <h1
           style={{
-            fontSize: "clamp(1.4rem, 5vw, 2rem)",
-            fontWeight: "800",
             color: "#fff",
-            lineHeight: "1.2",
+            fontSize: "clamp(1.4rem, 4vw, 2rem)",
+            fontWeight: "800",
+            lineHeight: "1.15",
             letterSpacing: "-0.02em",
-            marginBottom: "0.75rem",
+            marginBottom: "0.5rem",
+            textShadow: "0 2px 10px rgba(0,0,0,0.1)",
           }}
         >
-          See Yourself<br />Before You Buy
-        </h2>
+          See Yourself
+          <br /> Before You Buy.
+        </h1>
 
         {/* Subtext */}
         <p
           style={{
-            color: "rgba(255,255,255,0.85)",
-            fontSize: "0.9rem",
-            lineHeight: "1.6",
-            marginBottom: "1.5rem",
-            maxWidth: "340px",
+            color: "rgba(255,255,255,0.9)",
+            fontSize: "clamp(0.85rem, 2vw, 1rem)",
+            lineHeight: "1.4",
+            marginBottom: "1rem",
+            maxWidth: "380px",
           }}
         >
           Upload one photo. Try any outfit instantly.
@@ -106,30 +109,28 @@ export default function HeroBanner({ onExplore }) {
         {/* CTA */}
         <button
           onClick={onExplore}
-          id="hero-explore-btn"
           style={{
             background: "#fff",
             color: "var(--color-brand-dark)",
-            fontWeight: "700",
-            fontSize: "0.875rem",
-            padding: "0.75rem 1.75rem",
-            borderRadius: "var(--radius-md)",
             border: "none",
+            padding: "0.6rem 1.25rem",
+            borderRadius: "var(--radius-full)",
+            fontSize: "0.85rem",
+            fontWeight: "700",
             cursor: "pointer",
-            transition: "all 0.18s ease",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-            letterSpacing: "0.01em",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            transition: "transform 0.15s ease, box-shadow 0.15s ease",
           }}
           onMouseEnter={(e) => {
-            e.target.style.transform = "translateY(-2px)";
-            e.target.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)";
+            e.target.style.transform = "translateY(-1px)";
+            e.target.style.boxShadow = "0 6px 16px rgba(0,0,0,0.15)";
           }}
           onMouseLeave={(e) => {
             e.target.style.transform = "translateY(0)";
-            e.target.style.boxShadow = "0 4px 16px rgba(0,0,0,0.15)";
+            e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
           }}
         >
-          Explore Collection →
+          Explore Collection
         </button>
       </div>
     </div>
