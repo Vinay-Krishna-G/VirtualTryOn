@@ -1,0 +1,31 @@
+# requirements.txt
+#
+# Why this file exists:
+#   Python needs to know which external libraries to install.
+#   This file lists them with version numbers.
+#   Install everything with: pip install -r requirements.txt
+#
+# Libraries explained:
+#
+# fastapi
+#   - The web framework (like Express but for Python)
+#   - Makes it easy to define API endpoints
+#   - Automatically generates API documentation at /docs
+#
+# uvicorn
+#   - The server that runs FastAPI (like how Node runs Express)
+#   - "uvicorn main:app --reload" starts the server with auto-restart
+#
+# python-multipart
+#   - Required for FastAPI to handle file uploads (multipart/form-data)
+#   - Without this, FastAPI cannot read uploaded image files
+#
+# Pillow
+#   - Python Imaging Library — for working with images
+#   - We use it in Phase 3 to create placeholder images
+#   - In Phase 4, we'll use it to process AI model outputs
+
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+Pillow==10.4.0
