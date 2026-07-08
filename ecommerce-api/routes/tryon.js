@@ -158,7 +158,7 @@ router.post(
             ...pythonFormData.getHeaders(),
           },
           responseType: "arraybuffer",
-          timeout: 120000, // 2-minute timeout (AI generation can be slow)
+          timeout: 600000, // 10-minute timeout (HuggingFace free spaces queue can be slow)
         }
       );
 

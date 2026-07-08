@@ -1,31 +1,45 @@
 # requirements.txt
 #
-# Why this file exists:
-#   Python needs to know which external libraries to install.
-#   This file lists them with version numbers.
-#   Install everything with: pip install -r requirements.txt
+# Install everything with:
+#   pip install -r requirements.txt
 #
-# Libraries explained:
-#
-# fastapi
-#   - The web framework (like Express but for Python)
-#   - Makes it easy to define API endpoints
-#   - Automatically generates API documentation at /docs
-#
-# uvicorn
-#   - The server that runs FastAPI (like how Node runs Express)
-#   - "uvicorn main:app --reload" starts the server with auto-restart
-#
-# python-multipart
-#   - Required for FastAPI to handle file uploads (multipart/form-data)
-#   - Without this, FastAPI cannot read uploaded image files
-#
-# Pillow
-#   - Python Imaging Library — for working with images
-#   - We use it in Phase 3 to create placeholder images
-#   - In Phase 4, we'll use it to process AI model outputs
+# ── Web framework ─────────────────────────────────────────────────────────────
+# fastapi        — Python web framework (like Express for Node.js)
+#                  Generates /docs automatically. Used to define our endpoints.
+# uvicorn        — ASGI server that runs FastAPI
+#                  "uvicorn app.main:app --reload" starts with auto-restart
+# python-multipart — Required for FastAPI to handle file uploads
+#                   (multipart/form-data). Without this, UploadFile won't work.
 
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 python-multipart==0.0.9
+
+# ── Google Gemini ─────────────────────────────────────────────────────────────
+# google-genai   — Official Google Generative AI Python SDK
+#                  Replaces the old google-generativeai package.
+#                  Supports image generation via response_modalities=["IMAGE"].
+#                  https://pypi.org/project/google-genai/
+
+google-genai>=0.8.0
+
+# ── Settings / Config ─────────────────────────────────────────────────────────
+# pydantic-settings — Loads settings from environment variables and .env files
+#                    Works with pydantic v2 (which FastAPI requires)
+# python-dotenv    — Reads .env files (used internally by pydantic-settings)
+
+pydantic-settings>=2.3.0
+python-dotenv>=1.0.0
+
+# ── Image processing ──────────────────────────────────────────────────────────
+# Pillow         — Python Imaging Library
+#                  Used for image format detection and any post-processing
+
 Pillow==10.4.0
+
+# ── HuggingFace / IDM-VTON ────────────────────────────────────────────────────
+# gradio_client  — HuggingFace Spaces Python client
+#                  Used to call IDM-VTON Space: yisol/IDM-VTON
+#                  No API key required. Free tier with queue.
+
+gradio_client>=1.3.0
