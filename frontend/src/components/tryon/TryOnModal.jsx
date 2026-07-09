@@ -23,6 +23,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 export default function TryOnModal({ product, onClose, onGenerate, isGenerating }) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
   // The file the user selected
   const [selectedFile, setSelectedFile] = useState(null);
   // Local preview URL for the selected file
@@ -131,21 +132,22 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
             marginBottom: "0.5rem",
           }}
         >
-          {/* Drag handle (mobile visual cue) */}
           <div>
             <div
               style={{
-                width: "36px",
-                height: "4px",
-                background: "var(--color-border)",
-                borderRadius: "2px",
-                margin: "0 auto 0.75rem",
+                width: "36px", height: "3px",
+                background: "linear-gradient(90deg, #c9a96e, #e8c987)",
+                borderRadius: "2px", margin: "0 auto 0.85rem",
+                boxShadow: "0 0 8px rgba(201,169,110,0.4)",
               }}
             />
-            <h2 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--color-text)" }}>
-              Welcome to the Virtual Dressing Room
+            <p style={{ fontSize: "0.6rem", fontWeight: "700", color: "var(--color-brand)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.2rem" }}>
+              ✨ Virtual Dressing Room
+            </p>
+            <h2 style={{ fontSize: "1rem", fontWeight: "700", color: "var(--color-text)", fontFamily: "var(--font-serif)" }}>
+              Try It On
             </h2>
-            <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
+            <p style={{ fontSize: "0.78rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
               {product.name}
             </p>
           </div>
@@ -155,18 +157,20 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
             aria-label="Close modal"
             style={{
               background: "var(--color-surface-2)",
-              border: "none",
+              border: "1px solid var(--color-border)",
               borderRadius: "50%",
-              width: "32px",
-              height: "32px",
-              fontSize: "1rem",
+              width: "34px", height: "34px",
+              fontSize: "0.9rem",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "var(--color-text-muted)",
               flexShrink: 0,
+              transition: "all 0.2s",
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--color-border-brand)"; e.currentTarget.style.color = "var(--color-brand)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--color-border)"; e.currentTarget.style.color = "var(--color-text-muted)"; }}
           >
             ✕
           </button>
@@ -177,26 +181,23 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
           {/* Product thumbnail */}
           <div
             style={{
-              display: "flex",
-              gap: "0.75rem",
-              alignItems: "center",
-              padding: "0.75rem",
-              background: "var(--color-surface-2)",
-              borderRadius: "var(--radius-md)",
-              marginBottom: "1.25rem",
+              display: "flex", gap: "0.75rem", alignItems: "center",
+              padding: "0.75rem", background: "var(--color-surface-2)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-md)", marginBottom: "1.25rem",
             }}
           >
             <img
               src={product.image}
               alt={product.name}
-              style={{ width: "52px", height: "70px", objectFit: "cover", borderRadius: "8px" }}
+              style={{ width: "52px", height: "70px", objectFit: "cover", objectPosition: "top", borderRadius: "8px", border: "1px solid var(--color-border)" }}
             />
             <div>
-              <p style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--color-text)" }}>
-                {product.name}
-              </p>
-              <p style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", marginTop: "2px" }}>
+              <p style={{ fontSize: "0.6rem", fontWeight: "700", color: "var(--color-brand)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.2rem" }}>
                 {product.brand}
+              </p>
+              <p style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--color-text)" }}>
+                {product.name}
               </p>
             </div>
           </div>
@@ -226,6 +227,30 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
                   border: "2px solid var(--color-brand)",
                 }}
               />
+              <button
+                onClick={() => setIsFullscreen(true)}
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                  background: "rgba(0,0,0,0.65)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  backdropFilter: "blur(6px)",
+                  fontSize: "14px"
+                }}
+                aria-label="Maximize image"
+                title="View Fullscreen"
+              >
+                🔍
+              </button>
               <button
                 onClick={() => fileInputRef.current.click()}
                 style={{
@@ -282,18 +307,18 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
           <div
             style={{
               padding: "0.75rem 1rem",
-              background: "#f0fdf4",
-              border: "1px solid #bbf7d0",
+              background: "rgba(74,222,128,0.05)",
+              border: "1px solid rgba(74,222,128,0.2)",
               borderRadius: "var(--radius-md)",
               marginBottom: "1.25rem",
             }}
           >
-            <p style={{ fontSize: "0.78rem", fontWeight: "700", color: "#15803d", marginBottom: "0.4rem" }}>
+            <p style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--color-success)", marginBottom: "0.4rem" }}>
               For best results:
             </p>
             {["Stand straight, full body visible", "Plain background preferred", "Good lighting"].map(
               (tip) => (
-                <p key={tip} style={{ fontSize: "0.75rem", color: "#16a34a", marginBottom: "0.2rem" }}>
+                <p key={tip} style={{ fontSize: "0.75rem", color: "rgba(74,222,128,0.75)", marginBottom: "0.2rem" }}>
                   ✓ {tip}
                 </p>
               )
@@ -346,5 +371,36 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
     </div>
   );
 
-  return createPortal(modalContent, document.body);
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      {isFullscreen && createPortal(
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+            background: "rgba(0,0,0,0.9)", zIndex: 100000,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "2rem"
+          }}
+          onClick={() => setIsFullscreen(false)}
+        >
+          <button
+            onClick={() => setIsFullscreen(false)}
+            style={{
+              position: "absolute", top: "20px", right: "20px",
+              background: "rgba(255,255,255,0.2)", color: "#fff", border: "none",
+              borderRadius: "50%", width: "40px", height: "40px", cursor: "pointer",
+              fontSize: "20px"
+            }}
+          >✕</button>
+          <img
+            src={previewUrl}
+            alt="Fullscreen preview"
+            style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+          />
+        </div>,
+        document.body
+      )}
+    </>
+  );
 }

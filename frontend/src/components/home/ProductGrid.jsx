@@ -66,8 +66,8 @@ export default function ProductGrid({
         <p style={{ fontWeight: "600", color: "var(--color-text-muted)", marginBottom: "0.4rem" }}>
           No products found
         </p>
-        <p style={{ fontSize: "0.85rem" }}>
-          Try a different search term or category
+        <p style={{ fontSize: "0.85rem", color: "var(--color-text-light)" }}>
+          Try selecting a different category
         </p>
       </div>
     );

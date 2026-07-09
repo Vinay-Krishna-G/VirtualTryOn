@@ -64,9 +64,9 @@ async def generate_tryon_fashn(
                 person_image=handle_file(str(person_tmp)),
                 garment_image=handle_file(str(garment_tmp)),
                 category=fashn_cat,
-                garment_photo_type="flat-lay", # Usually we are passing flat images of clothes
+                garment_photo_type="flat-lay", # Gradio choice must be 'model' or 'flat-lay'
                 num_timesteps=50,
-                guidance_scale=2.5, # Increased from 1.5 to strictly follow garment shape
+                guidance_scale=2.5, # Strictly follow garment shape
                 seed=seed_val,      # Randomized so 'Try Again' gives new results
                 segmentation_free=True,
                 api_name="/try_on"

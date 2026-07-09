@@ -1,273 +1,223 @@
 /**
- * pages/Home.jsx
- *
- * Why this file exists:
- *   The landing page — what every customer sees first.
- *   Contains: search bar, category filter, hero banner, product grid.
- *   Feels like a real shopping app, not an AI tool.
- *
- * Input (props):
- *   - products (array): full product list
- *   - categories (string[]): category list for filters
- *   - onSelectProduct (function): navigate to product details
- *
- * Output:
- *   - The Home page layout
+ * pages/Home.jsx — No search bar, fully theme-aware
  */
-
 import { useState, useRef } from "react";
 import HeroBanner from "../components/home/HeroBanner";
 import CategoryScroller from "../components/home/CategoryScroller";
 import ProductGrid from "../components/home/ProductGrid";
 
 export default function Home({ products, categories, onSelectProduct }) {
-  // Which category pill is active — "All" by default
+  const [activeGender, setActiveGender] = useState("Women");
   const [activeCategory, setActiveCategory] = useState("All");
-  // Text typed into the search bar
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Ref to the product grid section so we can scroll to it
   const gridRef = useRef(null);
 
-  /**
-   * handleExplore
-   *
-   * Why it exists:
-   *   When the hero CTA "Explore Collection" is clicked,
-   *   we smoothly scroll the user down to the product grid.
-   *
-   * Input: none
-   * Output: page scrolls to the product grid
-   */
   function handleExplore() {
     gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  /**
-   * handleSearch
-   *
-   * Why it exists:
-   *   Updates the search query state when the user types.
-   *   The ProductGrid component reads this to filter results.
-   *
-   * Input: event (React input change event)
-   * Output: updates searchQuery state
-   */
-  function handleSearch(event) {
-    setSearchQuery(event.target.value);
-    // Also reset category to "All" when searching
-    if (event.target.value) setActiveCategory("All");
+  // Filter products by gender
+  const genderProducts = products.filter((p) => p.gender === activeGender);
+  
+  // Calculate dynamic categories for selected gender
+  const dynamicCategories = ["All", ...new Set(genderProducts.map((p) => p.category))];
+
+  // Filter products by active category
+  const filteredProducts = activeCategory === "All"
+    ? genderProducts
+    : genderProducts.filter((p) => p.category === activeCategory);
+
+  // If gender changes, reset category if it's not present in new gender
+  if (activeCategory !== "All" && !dynamicCategories.includes(activeCategory)) {
+    setActiveCategory("All");
   }
 
   return (
     <div className="page-enter">
-      {/* ── Search Bar ── */}
-      <div
-        style={{
-          padding: "1rem 1rem 0",
-          maxWidth: "var(--max-width)",
-          margin: "0 auto",
-        }}
-      >
-        <div style={{ position: "relative" }}>
-          <span
-            style={{
-              position: "absolute",
-              left: "14px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              fontSize: "1rem",
-              color: "var(--color-text-light)",
-              pointerEvents: "none",
-            }}
-          >
-            🔍
-          </span>
-          <input
-            type="search"
-            placeholder="Search sarees, kurtis, lehengas..."
-            value={searchQuery}
-            onChange={handleSearch}
-            aria-label="Search products"
-            style={{
-              width: "100%",
-              padding: "0.8rem 1rem 0.8rem 2.75rem",
-              borderRadius: "var(--radius-full)",
-              border: "1.5px solid var(--color-border)",
-              background: "var(--color-surface)",
-              fontSize: "0.9rem",
-              color: "var(--color-text)",
-              outline: "none",
-              fontFamily: "var(--font)",
-              transition: "border-color 0.18s ease, box-shadow 0.18s ease",
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "var(--color-brand)";
-              e.target.style.boxShadow = "0 0 0 3px rgba(13,115,119,0.12)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "var(--color-border)";
-              e.target.style.boxShadow = "none";
-            }}
-          />
-          {/* Clear button appears when there's text */}
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              aria-label="Clear search"
-              style={{
-                position: "absolute",
-                right: "14px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "1rem",
-                color: "var(--color-text-light)",
-              }}
-            >
-              ✕
-            </button>
-          )}
+      <div style={{ maxWidth: "var(--max-width)", margin: "0 auto", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+
+        {/* ── Hero ── */}
+        <div>
+          <HeroBanner onExplore={handleExplore} />
         </div>
-      </div>
 
-        {/* ── Main Content ── */}
-      <div
-        style={{
-          maxWidth: "var(--max-width)",
-          margin: "0 auto",
-          padding: "1rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "2.5rem", // More breathing room for a premium feel
-        }}
-      >
-        {/* Category filter — only show when searching */}
-        {searchQuery && (
-          <div style={{ marginBottom: "-1.5rem" }}>
-            <CategoryScroller
-              categories={categories}
-              activeCategory={activeCategory}
-              onSelect={setActiveCategory}
-            />
+        {/* ── Department & Category Filters ── */}
+        <div>
+          {/* Gender Tabs */}
+          <div style={{
+            display: "flex", gap: "0.5rem", marginBottom: "1.25rem",
+            justifyContent: "center"
+          }}>
+            {["Women", "Men"].map(gender => (
+              <button
+                key={gender}
+                onClick={() => {
+                  setActiveGender(gender);
+                  setActiveCategory("All");
+                }}
+                style={{
+                  padding: "0.5rem 1.5rem",
+                  borderRadius: "var(--radius-full)",
+                  border: `1px solid ${activeGender === gender ? "var(--color-brand)" : "var(--color-border)"}`,
+                  background: activeGender === gender ? "var(--color-brand-light)" : "transparent",
+                  color: activeGender === gender ? "var(--color-brand)" : "var(--color-text-muted)",
+                  fontSize: "0.8rem",
+                  fontWeight: "700",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                {gender}'s
+              </button>
+            ))}
           </div>
-        )}
 
-        {/* If searching, just show standard grid */}
-        {searchQuery ? (
-          <div ref={gridRef}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: "700", marginBottom: "1rem" }}>
-              Results for "{searchQuery}"
+          <CategoryScroller
+            categories={dynamicCategories}
+            activeCategory={activeCategory}
+            onSelect={setActiveCategory}
+          />
+        </div>
+
+        {/* ── Product Grid ── */}
+        <div ref={gridRef}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1.25rem" }}>
+            <div>
+              <p style={{
+                fontSize: "0.6rem", fontWeight: "700", color: "var(--color-brand)",
+                textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.25rem",
+              }}>
+                ✦ {activeGender}'s {activeCategory === "All" ? "Collection" : activeCategory}
+              </p>
+              <h2 style={{
+                fontFamily: "var(--font-serif)", fontSize: "clamp(1.2rem, 3vw, 1.6rem)",
+                fontWeight: "700", color: "var(--color-text)", letterSpacing: "-0.02em",
+              }}>
+                {activeCategory === "All" ? "New Arrivals" : activeCategory}
+              </h2>
+            </div>
+            <span style={{ fontSize: "0.78rem", color: "var(--color-text-muted)" }}>
+              {filteredProducts.length} items
+            </span>
+          </div>
+
+          <ProductGrid
+            products={filteredProducts}
+            activeCategory={activeCategory}
+            searchQuery=""
+            onSelectProduct={onSelectProduct}
+          />
+        </div>
+
+        {/* ── AI Try-On Callout ── */}
+        <div style={{
+          borderRadius: "var(--radius-lg)", overflow: "hidden",
+          border: "1px solid var(--color-border-brand)",
+          background: "var(--color-brand-light)",
+          padding: "clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 2rem)",
+          position: "relative",
+        }}>
+          <div style={{
+            position: "absolute", top: "-60px", right: "-60px",
+            width: "220px", height: "220px", borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(201,169,110,0.15) 0%, transparent 70%)",
+            pointerEvents: "none",
+          }} />
+          <div style={{ position: "relative", zIndex: 1, maxWidth: "500px" }}>
+            <span style={{
+              display: "inline-block", fontSize: "0.6rem", fontWeight: "700",
+              color: "var(--color-brand)", textTransform: "uppercase",
+              letterSpacing: "0.12em", marginBottom: "0.75rem",
+              padding: "0.25rem 0.65rem",
+              border: "1px solid var(--color-border-brand)",
+              borderRadius: "var(--radius-full)",
+            }}>
+              ✨ Powered by AI
+            </span>
+            <h2 style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "clamp(1.3rem, 3vw, 1.8rem)", fontWeight: "700",
+              color: "var(--color-text)", lineHeight: 1.2, marginBottom: "0.75rem",
+            }}>
+              Try Before You Buy.{" "}
+              <span className="text-gold">Zero Guesswork.</span>
             </h2>
-            <ProductGrid
-              products={products}
-              activeCategory={activeCategory}
-              searchQuery={searchQuery}
-              onSelectProduct={onSelectProduct}
-            />
+            <p style={{
+              fontSize: "0.88rem", color: "var(--color-text-muted)",
+              lineHeight: "1.65", marginBottom: "1.5rem",
+            }}>
+              Our AI virtually drapes any garment on your uploaded photo in under 60 seconds. 
+              See the exact fit, colour, and drape before placing your order.
+            </p>
+            <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
+              {["Realistic Draping", "Private & Secure", "Ready in 60s"].map((item) => (
+                <div key={item} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ color: "var(--color-brand)", fontSize: "0.8rem" }}>✓</span>
+                  <span style={{ fontSize: "0.82rem", color: "var(--color-text-muted)", fontWeight: "500" }}>{item}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        ) : (
-          /* ── Premium Editorial Layout ── */
-          <>
-            {/* Hero Campaign */}
-            <div ref={gridRef}>
-              <HeroBanner onExplore={handleExplore} />
-            </div>
+        </div>
 
-            {/* New Collection */}
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1rem" }}>
-                <h2 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--color-text)", letterSpacing: "-0.02em" }}>
-                  New Collection
-                </h2>
-                <button style={{ background: "none", border: "none", color: "var(--color-brand)", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}>
-                  View All →
-                </button>
-              </div>
-              <ProductGrid
-                products={products.slice(0, 4)} // Just show top 4
-                activeCategory="All"
-                searchQuery=""
-                onSelectProduct={onSelectProduct}
-              />
-            </div>
-
-            {/* ── Customer Gallery ── */}
-            <div style={{ background: "var(--color-surface)", margin: "0 -1rem", padding: "2.5rem 1rem", borderTop: "1px solid var(--color-border)", borderBottom: "1px solid var(--color-border)" }}>
-              <div style={{ maxWidth: "var(--max-width)", margin: "0 auto" }}>
-                <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                  <h2 style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--color-text)", letterSpacing: "-0.03em" }}>
-                    Real Customers. Real Try-Ons.
-                  </h2>
-                  <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginTop: "0.4rem" }}>
-                    See how our AI styling assistant is helping thousands shop with confidence.
-                  </p>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
-                  {/* Hardcoded gallery item 1 */}
-                  <div style={{ background: "#fff", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-                    <div style={{ display: "flex", height: "180px" }}>
-                      <div style={{ flex: 1, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", borderRight: "1px solid #e2e8f0" }}>
-                         <span style={{ fontSize: "2rem" }}>👤</span>
-                      </div>
-                      <div style={{ flex: 1, background: "#f8fafc", position: "relative" }}>
-                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundImage: `url(${products[0]?.image})`, backgroundSize: "cover", backgroundPosition: "top", opacity: 0.9 }}></div>
-                        <div style={{ position: "absolute", bottom: "8px", right: "8px", background: "var(--color-brand)", color: "#fff", fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "10px", fontWeight: "700" }}>✨ AI</div>
-                      </div>
-                    </div>
-                    <div style={{ padding: "0.75rem", fontSize: "0.8rem" }}>
-                      <div style={{ color: "#f59e0b", fontSize: "0.9rem", marginBottom: "0.2rem" }}>★★★★★</div>
-                      <p style={{ color: "var(--color-text)", fontWeight: "500" }}>"Tried it on virtually, bought it instantly. Perfect fit!"</p>
-                      <p style={{ color: "var(--color-text-light)", fontSize: "0.7rem", marginTop: "0.3rem" }}>— Priya S.</p>
-                    </div>
-                  </div>
-                  
-                  {/* Hardcoded gallery item 2 */}
-                  <div style={{ background: "#fff", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--color-border)", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-                    <div style={{ display: "flex", height: "180px" }}>
-                      <div style={{ flex: 1, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", borderRight: "1px solid #e2e8f0" }}>
-                         <span style={{ fontSize: "2rem" }}>👩🏽</span>
-                      </div>
-                      <div style={{ flex: 1, background: "#f8fafc", position: "relative" }}>
-                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundImage: `url(${products[1]?.image})`, backgroundSize: "cover", backgroundPosition: "top", opacity: 0.9 }}></div>
-                        <div style={{ position: "absolute", bottom: "8px", right: "8px", background: "var(--color-brand)", color: "#fff", fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "10px", fontWeight: "700" }}>✨ AI</div>
-                      </div>
-                    </div>
-                    <div style={{ padding: "0.75rem", fontSize: "0.8rem" }}>
-                      <div style={{ color: "#f59e0b", fontSize: "0.9rem", marginBottom: "0.2rem" }}>★★★★★</div>
-                      <p style={{ color: "var(--color-text)", fontWeight: "500" }}>"Saved me so much time. Looked exactly like the preview."</p>
-                      <p style={{ color: "var(--color-text-light)", fontSize: "0.7rem", marginTop: "0.3rem" }}>— Anjali M.</p>
-                    </div>
-                  </div>
+        {/* ── Testimonials ── */}
+        <div style={{ paddingBottom: "1rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
+            <p style={{
+              fontSize: "0.6rem", fontWeight: "700", color: "var(--color-brand)",
+              textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.35rem",
+            }}>
+              ✦ Real Customers
+            </p>
+            <h2 style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "clamp(1.2rem, 3vw, 1.7rem)", fontWeight: "700",
+              color: "var(--color-text)", letterSpacing: "-0.02em",
+            }}>
+              What Our Shoppers Say
+            </h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: "1rem" }}>
+            {[
+              { name: "Priya S.", review: "Tried it on virtually, bought it instantly. The fit was perfect!", rating: "★★★★★", loc: "Mumbai" },
+              { name: "Anjali M.", review: "Saved me so many returns. This feature is a total game changer.", rating: "★★★★★", loc: "Delhi" },
+              { name: "Kavitha R.", review: "I was skeptical, but the AI preview was spot-on. Love it!", rating: "★★★★★", loc: "Bangalore" },
+            ].map((t) => (
+              <div
+                key={t.name}
+                style={{
+                  background: "var(--color-surface)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius-md)",
+                  padding: "1.25rem",
+                  transition: "border-color 0.2s, transform 0.2s, box-shadow 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-border-brand)";
+                  e.currentTarget.style.transform = "translateY(-3px)";
+                  e.currentTarget.style.boxShadow = "var(--shadow-gold)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-border)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                <div style={{ color: "#f59e0b", fontSize: "0.8rem", marginBottom: "0.65rem" }}>{t.rating}</div>
+                <p style={{ fontSize: "0.87rem", color: "var(--color-text-muted)", lineHeight: "1.65", marginBottom: "1rem", fontStyle: "italic" }}>
+                  "{t.review}"
+                </p>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--color-text)" }}>{t.name}</span>
+                  <span style={{ fontSize: "0.7rem", color: "var(--color-text-light)" }}>{t.loc}</span>
                 </div>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            {/* Best Sellers */}
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1rem" }}>
-                <h2 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--color-text)", letterSpacing: "-0.02em" }}>
-                  Best Sellers
-                </h2>
-                <button style={{ background: "none", border: "none", color: "var(--color-brand)", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}>
-                  View All →
-                </button>
-              </div>
-              <ProductGrid
-                products={products.slice(4, 8)} // Next 4
-                activeCategory="All"
-                searchQuery=""
-                onSelectProduct={onSelectProduct}
-              />
-            </div>
-            
-          </>
-        )}
       </div>
-
     </div>
   );
 }

@@ -17,7 +17,7 @@
  *   - Modal showing before/after comparison with action buttons
  */
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 export default function GeneratedResultModal({
@@ -27,6 +27,8 @@ export default function GeneratedResultModal({
   onClose,
   onTryAgain,
 }) {
+  const [fullscreenImage, setFullscreenImage] = useState(null);
+
   /**
    * handleDownload
    *
@@ -177,18 +179,44 @@ export default function GeneratedResultModal({
               >
                 ✨ Try-On
               </p>
-              <img
-                src={resultImageUrl}
-                alt="AI generated try-on result"
-                style={{
-                  width: "100%",
-                  aspectRatio: "3/4",
-                  objectFit: "cover",
-                  borderRadius: "var(--radius-md)",
-                  border: "2px solid var(--color-brand)",
-                  boxShadow: "0 0 20px rgba(13,115,119,0.2)",
-                }}
-              />
+              <div style={{ position: "relative" }}>
+                <img
+                  src={resultImageUrl}
+                  alt="AI generated try-on result"
+                  style={{
+                    width: "100%",
+                    aspectRatio: "3/4",
+                    objectFit: "cover",
+                    borderRadius: "var(--radius-md)",
+                    border: "2px solid var(--color-brand)",
+                    boxShadow: "0 0 20px rgba(13,115,119,0.2)",
+                  }}
+                />
+                <button
+                  onClick={() => setFullscreenImage(resultImageUrl)}
+                  style={{
+                    position: "absolute",
+                    top: "8px",
+                    right: "8px",
+                    background: "rgba(0,0,0,0.65)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "28px",
+                    height: "28px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    backdropFilter: "blur(6px)",
+                    fontSize: "12px"
+                  }}
+                  aria-label="Maximize generated image"
+                  title="View Fullscreen"
+                >
+                  🔍
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -248,5 +276,36 @@ export default function GeneratedResultModal({
     </div>
   );
 
-  return createPortal(modalContent, document.body);
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      {fullscreenImage && createPortal(
+        <div
+          style={{
+            position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+            background: "rgba(0,0,0,0.9)", zIndex: 100000,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "2rem"
+          }}
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button
+            onClick={() => setFullscreenImage(null)}
+            style={{
+              position: "absolute", top: "20px", right: "20px",
+              background: "rgba(255,255,255,0.2)", color: "#fff", border: "none",
+              borderRadius: "50%", width: "40px", height: "40px", cursor: "pointer",
+              fontSize: "20px"
+            }}
+          >✕</button>
+          <img
+            src={fullscreenImage}
+            alt="Fullscreen preview"
+            style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+          />
+        </div>,
+        document.body
+      )}
+    </>
+  );
 }

@@ -1,29 +1,17 @@
 /**
- * components/home/CategoryScroller.jsx
- *
- * Why this file exists:
- *   Lets users filter products by category.
- *   Horizontal scroll on mobile (no wrapping), flex row on desktop.
- *   The "All" pill is selected by default.
- *
- * Input (props):
- *   - categories (string[]): list from getCategories()
- *   - activeCategory (string): currently selected category
- *   - onSelect (function): called with the category name when tapped
- *
- * Output:
- *   - Horizontally scrollable row of tappable category pills
+ * components/home/CategoryScroller.jsx — Luxury dark redesign
  */
-
 export default function CategoryScroller({ categories, activeCategory, onSelect }) {
-  // Icons for known categories — falls back to 🏷️
   const ICONS = {
-    "All": "🛍️",
+    "All": "✦",
     "Sarees": "🥻",
     "Lehengas": "👰",
     "Kurtis": "👚",
     "Suits": "🎽",
-    "Men's Wear": "👔",
+    "Shirts": "👔",
+    "Blazers": "🧥",
+    "Jeans": "👖",
+    "T-Shirts": "👕",
   };
 
   return (
@@ -32,9 +20,9 @@ export default function CategoryScroller({ categories, activeCategory, onSelect 
         display: "flex",
         gap: "0.5rem",
         overflowX: "auto",
-        paddingBottom: "4px",   /* prevents scrollbar from clipping pill shadows */
-        scrollbarWidth: "none",  /* hide scrollbar on Firefox */
-        msOverflowStyle: "none", /* hide scrollbar on IE */
+        paddingBottom: "4px",
+        scrollbarWidth: "none",
+        msOverflowStyle: "none",
         WebkitOverflowScrolling: "touch",
       }}
       role="tablist"
@@ -42,7 +30,7 @@ export default function CategoryScroller({ categories, activeCategory, onSelect 
     >
       {categories.map((category) => {
         const isActive = activeCategory === category;
-        const icon = ICONS[category] || "🏷️";
+        const icon = ICONS[category] || "✦";
 
         return (
           <button
@@ -51,32 +39,35 @@ export default function CategoryScroller({ categories, activeCategory, onSelect 
             aria-selected={isActive}
             onClick={() => onSelect(category)}
             style={{
-              flexShrink: 0,   /* never wrap or compress */
+              flexShrink: 0,
               display: "inline-flex",
               alignItems: "center",
-              gap: "5px",
-              padding: "0.45rem 1rem",
+              gap: "6px",
+              padding: "0.45rem 1.1rem",
               borderRadius: "var(--radius-full)",
-              border: "1.5px solid",
+              border: isActive
+                ? "1px solid rgba(201,169,110,0.5)"
+                : "1px solid var(--color-border)",
               cursor: "pointer",
-              fontSize: "0.82rem",
+              fontSize: "0.78rem",
               fontWeight: "600",
-              transition: "all 0.18s ease",
+              transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
               whiteSpace: "nowrap",
-              /* Active: filled teal; Inactive: outlined grey */
-              background: isActive ? "var(--color-brand)" : "var(--color-surface)",
-              borderColor: isActive ? "var(--color-brand)" : "var(--color-border)",
-              color: isActive ? "#fff" : "var(--color-text-muted)",
-              boxShadow: isActive ? "0 3px 10px rgba(13,115,119,0.3)" : "none",
+              letterSpacing: "0.03em",
+              background: isActive
+                ? "linear-gradient(135deg, rgba(201,169,110,0.15), rgba(201,169,110,0.08))"
+                : "var(--color-glass)",
+              backdropFilter: "blur(8px)",
+              color: isActive ? "var(--color-brand)" : "var(--color-text-muted)",
+              boxShadow: isActive ? "0 0 12px rgba(201,169,110,0.15)" : "none",
             }}
           >
-            <span style={{ fontSize: "0.9rem" }}>{icon}</span>
+            <span style={{ fontSize: "0.85rem" }}>{icon}</span>
             {category}
           </button>
         );
       })}
 
-      {/* Hide scrollbar on webkit (Chrome, Safari) */}
       <style>{`
         div[role="tablist"]::-webkit-scrollbar { display: none; }
       `}</style>

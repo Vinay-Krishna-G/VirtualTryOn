@@ -1,32 +1,19 @@
 /**
  * components/layout/BottomNavigation.jsx
- *
- * Why this file exists:
- *   Mobile users navigate with their thumbs, so important actions
- *   live at the bottom of the screen within easy reach.
- *   This is a standard mobile UX pattern (used by Myntra, Amazon, etc.)
- *
- *   On desktop (tablet and wider), this bar is hidden — the header handles it.
- *
- * Input (props):
- *   - currentPage (string): "home" | "product" | "dashboard"
- *   - onNavigate (function): called with the page name when tapped
- *
- * Output:
- *   Fixed bottom bar with 4 navigation items (mobile only)
+ * — No search or dashboard, theme toggle included
  */
 
 const NAV_ITEMS = [
-  { id: "home",      icon: "🏠", label: "Home" },
-  { id: "search",    icon: "🔍", label: "Search" },
-  { id: "dashboard", icon: "📊", label: "Dashboard" },
-  { id: "cart",      icon: "🛒", label: "Cart" },
+  { id: "home",  label: "Home",  emoji: "🏠" },
+  { id: "cart",  label: "Cart",  emoji: "🛒" },
 ];
 
-export default function BottomNavigation({ currentPage, onNavigate }) {
+export default function BottomNavigation({ currentPage, onNavigate, theme, onToggleTheme }) {
+  const isDark = theme === "dark";
+
   function handleTap(itemId) {
-    if (itemId === "cart" || itemId === "search") {
-      alert(`Demo: ${itemId.charAt(0).toUpperCase() + itemId.slice(1)} feature coming soon!`);
+    if (itemId === "cart") {
+      alert("Demo: Cart feature coming soon!");
       return;
     }
     onNavigate(itemId);
@@ -34,24 +21,18 @@ export default function BottomNavigation({ currentPage, onNavigate }) {
 
   return (
     <>
-      {/* Only visible on mobile (hidden on md+) */}
       <nav
         role="navigation"
         aria-label="Bottom navigation"
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 40,
-          background: "#fff",
-          borderTop: "1px solid var(--color-border)",
-          boxShadow: "0 -2px 12px rgba(0,0,0,0.08)",
-          height: "var(--bottom-nav-height)",
-          display: "flex",
-          alignItems: "stretch",
-        }}
         className="bottom-nav"
+        style={{
+          position: "fixed", bottom: 0, left: 0, right: 0,
+          zIndex: 40, height: "var(--bottom-nav-height)",
+          background: isDark ? "rgba(10,10,11,0.90)" : "rgba(247,245,242,0.94)",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          borderTop: "1px solid var(--color-border-hover)",
+          display: "flex", alignItems: "stretch",
+        }}
       >
         {NAV_ITEMS.map((item) => {
           const isActive = currentPage === item.id;
@@ -62,55 +43,53 @@ export default function BottomNavigation({ currentPage, onNavigate }) {
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
               style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "3px",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "0.5rem",
-                transition: "color 0.15s ease",
-                color: isActive ? "var(--color-brand)" : "var(--color-text-light)",
+                flex: 1, display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                gap: "4px", background: "none", border: "none",
+                cursor: "pointer", padding: "0.5rem", position: "relative",
+                transition: "all 0.2s ease",
+                color: isActive ? "var(--color-brand)" : "var(--color-text-muted)",
               }}
             >
-              <span style={{ fontSize: "1.25rem" }}>{item.icon}</span>
-              <span
-                style={{
-                  fontSize: "0.62rem",
-                  fontWeight: isActive ? "700" : "500",
-                  letterSpacing: "0.02em",
-                }}
-              >
+              {isActive && (
+                <span style={{
+                  position: "absolute", top: 0, left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "30px", height: "2px",
+                  background: "linear-gradient(90deg, #c9a96e, #e8c987)",
+                  borderRadius: "0 0 2px 2px",
+                  boxShadow: "0 0 8px rgba(201,169,110,0.5)",
+                }} />
+              )}
+              <span style={{ fontSize: "1.2rem" }}>{item.emoji}</span>
+              <span style={{
+                fontSize: "0.58rem", fontWeight: isActive ? "700" : "500",
+                letterSpacing: "0.06em", textTransform: "uppercase",
+              }}>
                 {item.label}
               </span>
-              {/* Active indicator dot */}
-              {isActive && (
-                <span
-                  style={{
-                    width: "4px",
-                    height: "4px",
-                    borderRadius: "50%",
-                    background: "var(--color-brand)",
-                    position: "absolute",
-                    bottom: "6px",
-                  }}
-                />
-              )}
             </button>
           );
         })}
-      </nav>
 
-      {/* Hide bottom nav on tablet/desktop */}
-      <style>{`
-        @media (min-width: 768px) {
-          .bottom-nav { display: none !important; }
-          body { padding-bottom: 0 !important; }
-        }
-      `}</style>
+        {/* Theme Toggle in bottom nav */}
+        <button
+          onClick={onToggleTheme}
+          aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+          style={{
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            gap: "4px", background: "none", border: "none",
+            cursor: "pointer", padding: "0.5rem",
+            color: "var(--color-text-muted)", transition: "color 0.2s",
+          }}
+        >
+          <span style={{ fontSize: "1.2rem" }}>{isDark ? "☀️" : "🌙"}</span>
+          <span style={{ fontSize: "0.58rem", fontWeight: "500", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+            Theme
+          </span>
+        </button>
+      </nav>
     </>
   );
 }
