@@ -1,0 +1,5 @@
+3. REFERENCE IMAGE RULE
+
+The second image is only a garment reference.
+Ignore the model, pose, background, lighting and body from the reference image.
+Copy ONLY the garment.

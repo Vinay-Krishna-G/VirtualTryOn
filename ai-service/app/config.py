@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # ── Gemini ─────────────────────────────────────────────────────────────────
     GEMINI_API_KEY: str = ""
 
+    # ── OpenAI ─────────────────────────────────────────────────────────────────
+    OPENAI_API_KEY: str = ""
+
     # ── File storage ───────────────────────────────────────────────────────────
     # Paths are relative to the ai-service root directory
     UPLOAD_FOLDER: str = "temp/uploads"
@@ -57,7 +60,8 @@ class Settings(BaseSettings):
     #   "gemini"  — Google Gemini image generation (requires paid plan)
     #   "idmvton" — IDM-VTON on HuggingFace Spaces (free, no API key needed)
     #   "fashn"   — fashn-vton-1.5 on HuggingFace Spaces
-    AI_PROVIDER: str = "fashn"
+    #   "openai"  — OpenAI DALL-E 3 image generation (requires OPENAI_API_KEY)
+    AI_PROVIDER: str = "openai"
 
     # Optional token for HuggingFace (used by fashn/idmvton to bypass ZeroGPU limits)
     HF_TOKEN: Optional[str] = None

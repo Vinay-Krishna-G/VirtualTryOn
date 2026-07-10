@@ -1,127 +1,264 @@
-/**
- * routes/products.js
- *
- * Why this file exists:
- *   One responsibility: return the list of products.
- *   React will call GET /api/products to get this data.
- *
- *   Right now we return hardcoded data matching what's in the frontend.
- *   In a real app, this would query a MongoDB database.
- *
- * Endpoints in this file:
- *   GET /api/products → returns an array of product objects
- */
-
 const express = require("express");
-
-// express.Router() creates a mini-application that handles routes.
-// Think of it as a section of our URL map.
 const router = express.Router();
 
-// ── Hardcoded Products ────────────────────────────────────────────────────────
-// This matches the data in frontend/src/data/products.js
-// In Phase 2+, this will come from MongoDB.
-// The image path here is the public folder path that Vite serves.
 const DEMO_PRODUCTS = [
   {
-    id: "red-silk-saree",
+    id: "w_saree",
     name: "Red Silk Saree",
+    brand: "Nalli",
+    price: 15000,
+    originalPrice: 18000,
+    discount: 16,
+    rating: 4.8,
+    reviewCount: 3420,
+    gender: "Women",
     category: "Saree",
-    description: "Luxurious Banarasi silk with intricate gold zari work",
-    image: "/products/red-silk-saree.png",
-    tags: ["Silk", "Festive", "Traditional"],
+    description: "Luxurious Red Silk Saree with gold zari work",
+    image: "/products/w_saree.png",
+    tags: ["Saree", "Women", "Festive"],
   },
   {
-    id: "blue-cotton-saree",
-    name: "Blue Cotton Saree",
-    category: "Saree",
-    description: "Breezy cotton weave with delicate white border pattern",
-    image: "/products/blue-cotton-saree.png",
-    tags: ["Cotton", "Casual", "Lightweight"],
-  },
-  {
-    id: "wedding-lehenga",
-    name: "Wedding Lehenga",
+    id: "w_lehenga",
+    name: "Bridal Pink Lehenga",
+    brand: "Sabyasachi",
+    price: 45000,
+    originalPrice: 50000,
+    discount: 10,
+    rating: 4.9,
+    reviewCount: 890,
+    gender: "Women",
     category: "Lehenga",
-    description: "Opulent bridal lehenga with heavy gold embroidery",
-    image: "/products/wedding-lehenga.png",
-    tags: ["Bridal", "Embroidery", "Premium"],
+    description: "Bridal Pink Lehenga with heavy embroidery",
+    image: "/products/w_lehenga.png",
+    tags: ["Lehenga", "Women", "Bridal"],
   },
   {
-    id: "printed-kurti",
-    name: "Printed Kurti",
+    id: "w_kurti",
+    name: "Teal Casual Kurti",
+    brand: "Biba",
+    price: 1200,
+    originalPrice: 2000,
+    discount: 40,
+    rating: 4.5,
+    reviewCount: 1540,
+    gender: "Women",
     category: "Kurti",
-    description: "Teal floral block-print kurti, perfect for daily wear",
-    image: "/products/printed-kurti.png",
-    tags: ["Block Print", "Casual", "Daily Wear"],
+    description: "Teal Printed Casual Kurti",
+    image: "/products/w_kurti.png",
+    tags: ["Kurti", "Women", "Casual"],
   },
   {
-    id: "designer-saree",
-    name: "Designer Saree",
-    category: "Saree",
-    description: "Peach georgette with sequin embroidery for parties",
-    image: "/products/designer-saree.png",
-    tags: ["Party Wear", "Sequin", "Georgette"],
-  },
-  {
-    id: "green-saree",
-    name: "Green Kanjivaram Saree",
-    category: "Saree",
-    description: "Rich emerald Kanjivaram silk with golden temple border",
-    image: "/products/green-saree.png",
-    tags: ["Silk", "Kanjivaram", "Traditional"],
-  },
-  {
-    id: "white-shirt",
-    name: "White Oxford Shirt",
+    id: "w_dress",
+    name: "Red Wrap Dress",
+    brand: "Zara",
+    price: 3500,
+    originalPrice: 4000,
+    discount: 12,
+    rating: 4.7,
+    reviewCount: 520,
+    gender: "Women",
     category: "Western",
-    description: "Classic button-down Oxford shirt, formal or smart casual",
-    image: "/products/white-shirt.png",
-    tags: ["Formal", "Men's", "Cotton"],
+    description: "Elegant Red Wrap Western Dress",
+    image: "/products/w_dress.png",
+    tags: ["Dress", "Women", "Western"],
   },
   {
-    id: "black-blazer",
+    id: "w_top",
+    name: "Floral Chiffon Blouse",
+    brand: "H&M",
+    price: 1499,
+    originalPrice: 1999,
+    discount: 25,
+    rating: 4.4,
+    reviewCount: 980,
+    gender: "Women",
+    category: "Western",
+    description: "Floral Chiffon Blouse top",
+    image: "/products/w_top.png",
+    tags: ["Top", "Women", "Western"],
+  },
+  {
+    id: "m_blazer",
     name: "Black Slim Blazer",
+    brand: "Raymond",
+    price: 8500,
+    originalPrice: 10000,
+    discount: 15,
+    rating: 4.8,
+    reviewCount: 412,
+    gender: "Men",
     category: "Western",
-    description: "Sleek single-breasted slim fit blazer for professionals",
-    image: "/products/black-blazer.png",
-    tags: ["Formal", "Men's", "Premium"],
+    description: "Black Slim Fit Formal Blazer",
+    image: "/products/m_blazer.png",
+    tags: ["Blazer", "Men", "Formal"],
   },
   {
-    id: "purple-saree",
-    name: "Purple Chiffon Saree",
+    id: "m_shirt",
+    name: "White Oxford Shirt",
+    brand: "Allen Solly",
+    price: 1800,
+    originalPrice: 2200,
+    discount: 18,
+    rating: 4.6,
+    reviewCount: 1245,
+    gender: "Men",
+    category: "Western",
+    description: "White Oxford Formal Shirt",
+    image: "/products/m_shirt.png",
+    tags: ["Shirt", "Men", "Formal"],
+  },
+  {
+    id: "m_tshirt",
+    name: "Striped Cotton T-Shirt",
+    brand: "Levis",
+    price: 999,
+    originalPrice: 1499,
+    discount: 33,
+    rating: 4.5,
+    reviewCount: 2210,
+    gender: "Men",
+    category: "Western",
+    description: "Striped Cotton Casual T-Shirt",
+    image: "/products/m_tshirt.png",
+    tags: ["T-Shirt", "Men", "Casual"],
+  },
+  {
+    id: "m_jeans",
+    name: "Blue Denim Jeans",
+    brand: "Wrangler",
+    price: 2500,
+    originalPrice: 3200,
+    discount: 21,
+    rating: 4.7,
+    reviewCount: 3340,
+    gender: "Men",
+    category: "Western",
+    description: "Classic Blue Denim Jeans",
+    image: "/products/m_jeans.png",
+    tags: ["Jeans", "Men", "Casual"],
+  },
+  {
+    id: "m_kurta",
+    name: "Yellow Festive Kurta",
+    brand: "Manyavar",
+    price: 2999,
+    originalPrice: 3500,
+    discount: 14,
+    rating: 4.9,
+    reviewCount: 650,
+    gender: "Men",
+    category: "Kurta",
+    description: "Traditional Yellow festive Kurta",
+    image: "/products/m_kurta.png",
+    tags: ["Kurta", "Men", "Traditional"],
+  },
+  {
+    id: "w_saree2",
+    name: "Green Kanjivaram Saree",
+    brand: "Kalyan",
+    price: 18000,
+    originalPrice: 22000,
+    discount: 18,
+    rating: 4.9,
+    reviewCount: 1205,
+    gender: "Women",
     category: "Saree",
-    description: "Royal violet chiffon with silver embroidery border",
-    image: "/products/purple-saree.png",
-    tags: ["Party Wear", "Chiffon", "Embroidery"],
+    description: "Green Kanjivaram Saree with a golden border",
+    image: "/products/w_saree2.png",
+    tags: ["Saree", "Women", "Festive", "Green"]
   },
   {
-    id: "anarkali-suit",
-    name: "Blue Anarkali Suit",
-    category: "Suit",
-    description: "Floor-length royal blue Anarkali with gold embroidery",
-    image: "/products/anarkali-suit.png",
-    tags: ["Festive", "Embroidery", "Full Length"],
+    id: "w_saree3",
+    name: "Yellow Bandhani Saree",
+    brand: "Biba",
+    price: 8500,
+    originalPrice: 9500,
+    discount: 10,
+    rating: 4.6,
+    reviewCount: 412,
+    gender: "Women",
+    category: "Saree",
+    description: "Yellow Bandhani Saree",
+    image: "/products/w_saree3.png",
+    tags: ["Saree", "Women", "Festive", "Yellow"]
   },
+  {
+    id: "w_lehenga2",
+    name: "Blue Velvet Lehenga",
+    brand: "Sabyasachi",
+    price: 55000,
+    originalPrice: 60000,
+    discount: 8,
+    rating: 4.9,
+    reviewCount: 89,
+    gender: "Women",
+    category: "Lehenga",
+    description: "Navy Blue Velvet Lehenga with silver embroidery",
+    image: "/products/w_lehenga2.png",
+    tags: ["Lehenga", "Women", "Bridal", "Blue"]
+  },
+  {
+    id: "w_lehenga3",
+    name: "White Floral Lehenga",
+    brand: "Manish Malhotra",
+    price: 48000,
+    originalPrice: 55000,
+    discount: 12,
+    rating: 4.8,
+    reviewCount: 345,
+    gender: "Women",
+    category: "Lehenga",
+    description: "White Floral Organza Lehenga",
+    image: "/products/w_lehenga3.png",
+    tags: ["Lehenga", "Women", "Bridal", "White"]
+  },
+  {
+    id: "w_kurti2",
+    name: "Yellow Chikankari Kurti",
+    brand: "W",
+    price: 1800,
+    originalPrice: 2500,
+    discount: 28,
+    rating: 4.7,
+    reviewCount: 678,
+    gender: "Women",
+    category: "Kurti",
+    description: "Bright Yellow Chikankari Kurti",
+    image: "/products/w_kurti2.png",
+    tags: ["Kurti", "Women", "Casual", "Yellow"]
+  },
+  {
+    id: "w_kurti3",
+    name: "White Cotton Kurti",
+    brand: "Aurelia",
+    price: 1200,
+    originalPrice: 1500,
+    discount: 20,
+    rating: 4.5,
+    reviewCount: 934,
+    gender: "Women",
+    category: "Kurti",
+    description: "Crisp White Cotton Kurti",
+    image: "/products/w_kurti3.png",
+    tags: ["Kurti", "Women", "Casual", "White"]
+  },
+  {
+    id: "m_kurta2",
+    name: "White Cotton Mens Kurta",
+    brand: "FabIndia",
+    price: 2200,
+    originalPrice: 2800,
+    discount: 21,
+    rating: 4.6,
+    reviewCount: 423,
+    gender: "Men",
+    category: "Kurta",
+    description: "Classic White Cotton Mens Kurta",
+    image: "/products/m_kurta2.png",
+    tags: ["Kurta", "Men", "Traditional", "White"]
+  }
 ];
 
-// ── Route: GET /api/products ──────────────────────────────────────────────────
-/**
- * GET /api/products
- *
- * Why it exists:
- *   React needs to know which products exist.
- *   We return the full list so the frontend can display the garment grid.
- *
- * Input: none (no request body needed for GET requests)
- *
- * Output:
- *   HTTP 200 with JSON body:
- *   {
- *     "success": true,
- *     "products": [ { id, name, category, ... }, ... ]
- *   }
- */
 router.get("/", (req, res) => {
   res.json({
     success: true,

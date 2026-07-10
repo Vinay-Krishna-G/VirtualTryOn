@@ -1,5 +1,6 @@
 /**
- * pages/ProductDetails.jsx — Dark luxury redesign
+ * pages/ProductDetails.jsx — Professional luxury product page
+ * No emojis. Editorial layout. Robust against missing optional fields.
  */
 import { useState } from "react";
 import { formatPrice } from "../mock/products";
@@ -8,20 +9,15 @@ import GeneratedResultModal from "../components/tryon/GeneratedResultModal";
 import { generateTryOn } from "../services/tryonService";
 
 export default function ProductDetails({ product, onBack }) {
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
   const [isTryOnOpen, setIsTryOnOpen] = useState(false);
   const [isResultOpen, setIsResultOpen] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadedPreviewUrl, setUploadedPreviewUrl] = useState(null);
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [descExpanded, setDescExpanded] = useState(true);
   const [imgLoaded, setImgLoaded] = useState(false);
 
   async function handleGenerate(file) {
     setIsGenerating(true);
-    setUploadedFile(file);
     const preview = URL.createObjectURL(file);
     setUploadedPreviewUrl(preview);
     try {
@@ -44,37 +40,34 @@ export default function ProductDetails({ product, onBack }) {
 
   return (
     <div className="page-enter">
-      {/* Back button */}
-      <div style={{ maxWidth: "var(--max-width)", margin: "0 auto", padding: "1rem 1.25rem 0" }}>
+      {/* Back */}
+      <div style={{ maxWidth: "var(--max-width)", margin: "0 auto", padding: "1.25rem 1.5rem 0" }}>
         <button
           onClick={onBack}
           style={{
-            display: "inline-flex", alignItems: "center", gap: "6px",
-            background: "var(--color-glass)", border: "1px solid var(--color-glass-border)",
-            backdropFilter: "blur(8px)", borderRadius: "var(--radius-full)",
+            display: "inline-flex", alignItems: "center", gap: "8px",
+            background: "none", border: "none",
             cursor: "pointer", color: "var(--color-text-muted)",
-            fontSize: "0.8rem", fontWeight: "600", padding: "0.4rem 1rem",
-            transition: "all 0.2s", letterSpacing: "0.02em",
+            fontSize: "0.72rem", fontWeight: "500",
+            transition: "color 0.2s", letterSpacing: "0.05em",
+            textTransform: "uppercase", padding: "0.25rem 0",
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--color-border-brand)";
-            e.currentTarget.style.color = "var(--color-brand)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--color-glass-border)";
-            e.currentTarget.style.color = "var(--color-text-muted)";
-          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-brand)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
         >
-          ← Back
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Back to Collection
         </button>
       </div>
 
       <div
-        style={{ maxWidth: "var(--max-width)", margin: "0 auto", padding: "1rem 0 3rem" }}
+        style={{ maxWidth: "var(--max-width)", margin: "0 auto", padding: "1.25rem 0 4rem" }}
         className="product-layout"
       >
         {/* Product Image */}
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", overflow: "hidden" }}>
           {!imgLoaded && (
             <div className="skeleton" style={{ position: "absolute", inset: 0, borderRadius: 0, zIndex: 1 }} />
           )}
@@ -84,16 +77,16 @@ export default function ProductDetails({ product, onBack }) {
             onLoad={() => setImgLoaded(true)}
             style={{
               width: "100%", aspectRatio: "4/5", objectFit: "cover", objectPosition: "top",
-              display: "block", opacity: imgLoaded ? 1 : 0, transition: "opacity 0.3s ease",
+              display: "block", opacity: imgLoaded ? 1 : 0, transition: "opacity 0.4s ease",
             }}
             className="product-hero-img"
           />
           {product.discount > 0 && (
             <div style={{
               position: "absolute", top: "16px", left: "16px",
-              background: "var(--color-success)", color: "#0a1208",
-              padding: "0.3rem 0.8rem", borderRadius: "var(--radius-xs)",
-              fontSize: "0.72rem", fontWeight: "800", letterSpacing: "0.04em", textTransform: "uppercase",
+              background: "var(--color-brand)", color: "#fff",
+              padding: "0.3rem 0.75rem", borderRadius: "var(--radius-xs)",
+              fontSize: "0.68rem", fontWeight: "700", letterSpacing: "0.06em", textTransform: "uppercase",
             }}>
               -{product.discount}%
             </div>
@@ -101,181 +94,251 @@ export default function ProductDetails({ product, onBack }) {
         </div>
 
         {/* Product Info */}
-        <div style={{ padding: "1.5rem 1.25rem" }}>
-          <p style={{
-            fontSize: "0.65rem", fontWeight: "700", color: "var(--color-brand)",
-            textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.4rem",
-          }}>{product.brand}</p>
+        <div style={{ padding: "1.5rem 1.5rem 2rem" }}>
+
+          {/* Brand + Category */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+            <p style={{
+              fontSize: "0.65rem", fontWeight: "600", color: "var(--color-brand)",
+              textTransform: "uppercase", letterSpacing: "0.12em",
+            }}>{product.brand}</p>
+            <span style={{
+              fontSize: "0.6rem", fontWeight: "500", color: "var(--color-text-muted)",
+              border: "1px solid var(--color-border)", padding: "0.15rem 0.55rem",
+              borderRadius: "var(--radius-full)", letterSpacing: "0.06em", textTransform: "uppercase",
+            }}>
+              {product.category}
+            </span>
+          </div>
 
           <h1 style={{
-            fontFamily: "var(--font-serif)", fontSize: "clamp(1.4rem, 3vw, 2rem)",
-            fontWeight: "700", color: "var(--color-text)", lineHeight: "1.2",
-            letterSpacing: "-0.02em", marginBottom: "1rem",
+            fontFamily: "var(--font-serif)",
+            fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
+            fontWeight: "600", fontStyle: "italic",
+            color: "var(--color-text)", lineHeight: "1.15",
+            letterSpacing: "-0.01em", marginBottom: "1rem",
           }}>{product.name}</h1>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <span style={{ color: "#f59e0b", fontSize: "0.85rem" }}>★</span>
-              <span style={{ fontWeight: "700", fontSize: "0.88rem", color: "var(--color-text)" }}>{product.rating}</span>
-              <span style={{ color: "var(--color-text-light)", fontSize: "0.8rem" }}>
+          {/* Rating */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "1.25rem" }}>
+            <div style={{ display: "flex", gap: "2px" }}>
+              {[1,2,3,4,5].map(i => (
+                <svg key={i} width="12" height="12" viewBox="0 0 10 10" fill={i <= Math.round(product.rating) ? "var(--color-brand)" : "var(--color-border-hover)"}>
+                  <polygon points="5,1 6.18,3.86 9.33,4 7,5.86 7.63,9 5,7.5 2.37,9 3,5.86 0.67,4 3.82,3.86"/>
+                </svg>
+              ))}
+            </div>
+            <span style={{ fontWeight: "600", fontSize: "0.82rem", color: "var(--color-text)" }}>
+              {product.rating}
+            </span>
+            {product.reviewCount && (
+              <span style={{ color: "var(--color-text-muted)", fontSize: "0.78rem" }}>
                 {product.reviewCount.toLocaleString("en-IN")} reviews
               </span>
-            </div>
-            <span className="pill pill-tryon">✨ {product.tryOnCount.toLocaleString("en-IN")} tried this</span>
+            )}
           </div>
 
+          {/* Price */}
           <div style={{
             display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap",
-            marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: "1px solid var(--color-border)",
+            marginBottom: "1.75rem", paddingBottom: "1.75rem", borderBottom: "1px solid var(--color-border)",
           }}>
             <span className="price-current">{formatPrice(product.price)}</span>
-            {product.originalPrice > product.price && <span className="price-original">{formatPrice(product.originalPrice)}</span>}
-            {product.discount > 0 && <span className="price-discount">{product.discount}% off</span>}
+            {product.originalPrice > product.price && (
+              <span className="price-original">{formatPrice(product.originalPrice)}</span>
+            )}
+            {product.discount > 0 && (
+              <span className="price-discount">{product.discount}% off</span>
+            )}
           </div>
 
-          {/* Color picker */}
-          {product.colors.length > 0 && (
-            <div style={{ marginBottom: "1.25rem" }}>
-              <p style={{ fontSize: "0.78rem", fontWeight: "600", color: "var(--color-text-muted)", marginBottom: "0.6rem" }}>
-                Color: <span style={{ color: "var(--color-brand)" }}>{selectedColor}</span>
-              </p>
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                {product.colors.map((color) => (
-                  <button key={color} onClick={() => setSelectedColor(color)} style={{
-                    padding: "0.35rem 0.9rem", borderRadius: "var(--radius-full)",
-                    border: selectedColor === color ? "1px solid rgba(201,169,110,0.6)" : "1px solid var(--color-border)",
-                    cursor: "pointer", fontSize: "0.78rem", fontWeight: "600", transition: "all 0.18s ease",
-                    background: selectedColor === color ? "rgba(201,169,110,0.12)" : "transparent",
-                    color: selectedColor === color ? "var(--color-brand)" : "var(--color-text-muted)",
-                    fontFamily: "var(--font)",
-                  }}>{color}</button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Size picker */}
-          {product.sizes.length > 1 && (
-            <div style={{ marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: "1px solid var(--color-border)" }}>
-              <p style={{ fontSize: "0.78rem", fontWeight: "600", color: "var(--color-text-muted)", marginBottom: "0.6rem" }}>
-                Size: <span style={{ color: "var(--color-brand)" }}>{selectedSize}</span>
-              </p>
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                {product.sizes.map((size) => (
-                  <button key={size} onClick={() => setSelectedSize(size)} style={{
-                    width: "44px", height: "44px", borderRadius: "var(--radius-sm)",
-                    border: selectedSize === size ? "1px solid rgba(201,169,110,0.6)" : "1px solid var(--color-border)",
-                    cursor: "pointer", fontSize: "0.8rem", fontWeight: "600", transition: "all 0.18s ease",
-                    background: selectedSize === size ? "rgba(201,169,110,0.12)" : "transparent",
-                    color: selectedSize === size ? "var(--color-brand)" : "var(--color-text-muted)",
-                    fontFamily: "var(--font)",
-                  }}>{size}</button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* AI Try-On Section */}
+          {/* AI Try-On */}
           <div style={{
-            background: "linear-gradient(135deg, rgba(201,169,110,0.08), rgba(201,169,110,0.03))",
-            border: "1px solid rgba(201,169,110,0.2)",
-            borderRadius: "var(--radius-lg)", padding: "1.5rem",
-            marginBottom: "1.25rem", position: "relative", overflow: "hidden",
+            background: "linear-gradient(135deg, rgba(184,150,90,0.06), rgba(184,150,90,0.02))",
+            border: "1px solid var(--color-border-brand)",
+            borderRadius: "var(--radius-lg)",
+            marginBottom: "1.25rem", overflow: "hidden",
+            position: "relative",
           }}>
+            {/* Top content */}
+            <div style={{ padding: "1.5rem 1.5rem 1.25rem", position: "relative" }}>
+              <div style={{
+                position: "absolute", top: 0, right: 0,
+                width: "150px", height: "150px", borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(184,150,90,0.09) 0%, transparent 70%)",
+                transform: "translate(40%, -40%)", pointerEvents: "none",
+              }} />
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.5rem" }}>
+                <div style={{
+                  width: "6px", height: "6px", borderRadius: "50%",
+                  background: "var(--color-brand)",
+                  boxShadow: "0 0 8px rgba(184,150,90,0.6)",
+                  animation: "pulse 2s infinite",
+                }} />
+                <p style={{
+                  fontSize: "0.58rem", fontWeight: "700", color: "var(--color-brand)",
+                  textTransform: "uppercase", letterSpacing: "0.14em",
+                }}>
+                  Virtual Dressing Room — Powered by AI
+                </p>
+              </div>
+
+              <p style={{
+                fontFamily: "var(--font-serif)", fontSize: "1.15rem", fontStyle: "italic",
+                fontWeight: "600", color: "var(--color-text)", marginBottom: "0.9rem", lineHeight: "1.3",
+              }}>
+                See yourself wearing this, before you buy.
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                {[
+                  { icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", text: "Private & secure — your photo is never stored" },
+                  { icon: "M13 2L3 14h9l-1 8 10-12h-9l1-8z", text: "Photorealistic AI — garment adapts to your body" },
+                  { icon: "M12 2v20M2 12h20", text: "Results ready in under 60 seconds" },
+                ].map(({ icon, text }) => (
+                  <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                    <div style={{
+                      width: "20px", height: "20px", flexShrink: 0,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: "var(--color-brand-light)",
+                      borderRadius: "var(--radius-xs)",
+                      border: "1px solid var(--color-border-brand)",
+                    }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand)" strokeWidth="1.8" strokeLinecap="round">
+                        <path d={icon}/>
+                      </svg>
+                    </div>
+                    <span style={{ fontSize: "0.76rem", color: "var(--color-text-muted)", lineHeight: "1.55", paddingTop: "2px" }}>{text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Trust stat bar */}
             <div style={{
-              position: "absolute", top: "-40px", right: "-40px",
-              width: "150px", height: "150px", borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(201,169,110,0.1) 0%, transparent 70%)",
-              pointerEvents: "none",
-            }} />
-            <p style={{
-              fontSize: "0.6rem", fontWeight: "800", color: "var(--color-brand)",
-              textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.4rem",
-            }}>✨ Virtual Dressing Room</p>
-            <p style={{
-              fontFamily: "var(--font-serif)", fontSize: "1rem", fontWeight: "600",
-              color: "var(--color-text)", marginBottom: "0.75rem", lineHeight: "1.35",
+              display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+              borderTop: "1px solid var(--color-border-brand)",
             }}>
-              See yourself wearing this before ordering
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginBottom: "1.25rem" }}>
-              {["Realistic AI visualization", "Private & secure", "Ready in under 60s"].map((b) => (
-                <div key={b} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ color: "var(--color-brand)", fontSize: "0.75rem" }}>✓</span>
-                  <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", fontWeight: "500" }}>{b}</span>
+              {[["98%", "Accuracy"], ["< 60s", "Avg. Time"], ["50K+", "Tries"]].map(([num, label], i) => (
+                <div key={label} style={{
+                  padding: "0.85rem 0.5rem", textAlign: "center",
+                  borderRight: i < 2 ? "1px solid var(--color-border-brand)" : "none",
+                  background: "rgba(184,150,90,0.03)",
+                }}>
+                  <p style={{
+                    fontFamily: "var(--font-serif)", fontSize: "1.1rem",
+                    fontWeight: "600", color: "var(--color-brand)", lineHeight: 1,
+                  }}>{num}</p>
+                  <p style={{
+                    fontSize: "0.54rem", color: "var(--color-text-muted)",
+                    fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: "0.25rem",
+                  }}>{label}</p>
                 </div>
               ))}
             </div>
-            <button onClick={() => setIsTryOnOpen(true)} className="btn-tryon" id="try-on-btn"
-              style={{ width: "100%", padding: "1rem", fontSize: "0.9rem" }}>
-              ✨ Try It On
-            </button>
+
+            {/* CTA */}
+            <div style={{ padding: "1rem 1.5rem 1.5rem" }}>
+              <button
+                onClick={() => setIsTryOnOpen(true)}
+                className="btn-tryon"
+                id="try-on-btn"
+                style={{ width: "100%", padding: "1rem", fontSize: "0.82rem", letterSpacing: "0.08em" }}
+              >
+                Start Virtual Try-On
+              </button>
+            </div>
           </div>
 
           {/* Cart + Buy */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "1.25rem" }}>
-            <button onClick={() => alert("Demo: Add to Cart!")} className="btn-outline" style={{ width: "100%", padding: "0.9rem" }}>
-              🛒 Add to Cart
+            <button
+              onClick={() => alert("Demo: Add to Bag!")}
+              className="btn-outline"
+              style={{ width: "100%", padding: "0.9rem" }}
+            >
+              Add to Bag
             </button>
-            <button onClick={() => alert("Demo: Buy Now!")} className="btn-primary" style={{ width: "100%", padding: "0.9rem" }}>
-              ⚡ Buy Now
+            <button
+              onClick={() => alert("Demo: Buy Now!")}
+              className="btn-primary"
+              style={{ width: "100%", padding: "0.9rem" }}
+            >
+              Buy Now
             </button>
           </div>
 
           {/* Delivery */}
           <div style={{
-            display: "flex", alignItems: "center", gap: "10px",
-            padding: "0.85rem 1rem", background: "var(--color-surface-2)",
+            display: "flex", alignItems: "center", gap: "12px",
+            padding: "0.9rem 1rem", background: "var(--color-surface-2)",
             borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)",
             marginBottom: "1.5rem",
           }}>
-            <span style={{ fontSize: "1.2rem" }}>🚚</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand)" strokeWidth="1.5">
+              <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
             <div>
-              <p style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--color-text)" }}>Free Delivery</p>
-              <p style={{ fontSize: "0.72rem", color: "var(--color-text-light)" }}>Arrives in {product.deliveryDays} days</p>
+              <p style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--color-text)" }}>
+                Free Delivery
+              </p>
+              <p style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginTop: "1px" }}>
+                Arrives in 3–5 business days
+              </p>
             </div>
           </div>
 
           {/* Description */}
-          <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1rem" }}>
-            <button onClick={() => setDescExpanded((v) => !v)} style={{
-              width: "100%", display: "flex", justifyContent: "space-between",
-              alignItems: "center", background: "none", border: "none",
-              cursor: "pointer", padding: 0, fontFamily: "var(--font)",
-            }}>
-              <span style={{ fontWeight: "700", fontSize: "0.88rem", color: "var(--color-text)" }}>Description</span>
-              <span style={{ fontSize: "0.85rem", color: "var(--color-text-light)", transition: "transform 0.2s", transform: descExpanded ? "rotate(180deg)" : "rotate(0)" }}>▼</span>
-            </button>
-            {descExpanded && (
+          {product.description && (
+            <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1.25rem" }}>
+              <p style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--color-text)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>
+                Product Details
+              </p>
               <p style={{
-                marginTop: "0.85rem", fontSize: "0.85rem",
-                lineHeight: "1.75", color: "var(--color-text-muted)",
-                animation: "fadeInUp 0.25s ease forwards",
+                fontSize: "0.85rem", lineHeight: "1.8", color: "var(--color-text-muted)",
               }}>{product.description}</p>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Modals */}
       {isTryOnOpen && (
-        <TryOnModal product={product} onClose={() => setIsTryOnOpen(false)} onGenerate={handleGenerate} isGenerating={isGenerating} />
+        <TryOnModal
+          product={product}
+          onClose={() => setIsTryOnOpen(false)}
+          onGenerate={handleGenerate}
+          isGenerating={isGenerating}
+        />
       )}
       {isResultOpen && resultImageUrl && (
         <GeneratedResultModal
-          product={product} originalImageUrl={uploadedPreviewUrl} resultImageUrl={resultImageUrl}
-          onClose={() => setIsResultOpen(false)} onTryAgain={handleTryAgain}
+          product={product}
+          originalImageUrl={uploadedPreviewUrl}
+          resultImageUrl={resultImageUrl}
+          onClose={() => setIsResultOpen(false)}
+          onTryAgain={handleTryAgain}
         />
       )}
 
       <style>{`
         .product-layout { display: flex; flex-direction: column; }
-        .product-hero-img { max-height: 520px; }
+        .product-hero-img { max-height: 580px; }
         @media (min-width: 768px) {
-          .product-layout { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 2.5rem; padding: 1.5rem; }
-          .product-hero-img { border-radius: var(--radius-lg); max-height: 700px; }
+          .product-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: start;
+            gap: 3rem;
+            padding: 1.5rem 1.5rem;
+          }
+          .product-hero-img {
+            border-radius: var(--radius-lg);
+            max-height: 720px;
+          }
         }
-        @media (min-width: 1024px) { .product-layout { grid-template-columns: 1fr 1.1fr; } }
+        @media (min-width: 1024px) { .product-layout { grid-template-columns: 1.05fr 1fr; } }
       `}</style>
     </div>
   );

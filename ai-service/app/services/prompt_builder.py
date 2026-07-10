@@ -1,242 +1,105 @@
 """
 app/services/prompt_builder.py
 
-Reusable prompt templates for virtual try-on image generation.
-
-Responsibility:
-    Given a garment category (e.g. "saree", "shirt", "lehenga"),
-    return a detailed text prompt that instructs Gemini to:
-      - Preserve everything about the person EXCEPT their clothing.
-      - Replace the clothing with the garment in the reference image,
-        matching it exactly (color, texture, embroidery, pattern, fabric).
-
-Why a separate module?
-    Prompts are long, category-specific, and change frequently during
-    tuning.  Keeping them here means the route and Gemini service stay
-    clean and never need to change when we tweak a prompt.
-
-Usage:
-    from app.services.prompt_builder import build_prompt
-    prompt = build_prompt("saree")
+Standalone Prompt Builder for AI Virtual Try-On.
+Generates highly optimized, strict Image Editing prompts (80-120 words).
 """
 
 import logging
+from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
-# ── Category aliases ──────────────────────────────────────────────────────────
-# Map raw category strings (including productId keywords) → canonical key
-_ALIASES: dict[str, str] = {
-    # Saree
-    "saree": "saree",
-    "sari": "saree",
-    # Lehenga
+# Legacy aliases used by other integrations (kept for backward compatibility)
+_ALIASES: Dict[str, str] = {
+    "saree": "saree", "sari": "saree",
     "lehenga": "lehenga",
-    # Kurti / Kurta
-    "kurti": "kurti",
-    "kurta": "kurti",
-    # Anarkali Suit
-    "anarkali": "anarkali",
-    "suit": "anarkali",
-    # Western — Shirt
-    "shirt": "shirt",
-    "oxford": "shirt",
-    # Western — T-Shirt
-    "t-shirt": "tshirt",
-    "tshirt": "tshirt",
-    "tee": "tshirt",
-    # Western — Blazer / Jacket
-    "blazer": "blazer",
-    "jacket": "blazer",
-    # Western — Jeans / Trousers
-    "jeans": "jeans",
-    "trouser": "jeans",
-    "pant": "jeans",
-    # Generic dress
-    "dress": "dress",
-    # Western (fallback for the "Western" category label)
-    "western": "shirt",
+    "kurti": "kurti", "kurta": "kurti",
+    "anarkali": "anarkali", "suit": "anarkali",
+    "shirt": "shirt", "oxford": "shirt",
+    "t-shirt": "tshirt", "tshirt": "tshirt", "tee": "tshirt",
+    "blazer": "blazer", "jacket": "blazer",
+    "jeans": "jeans", "trouser": "jeans", "pant": "jeans",
+    "dress": "dress", "western": "shirt",
 }
 
-# ── Shared preservation clause ────────────────────────────────────────────────
-_PRESERVE = (
-    "CRITICAL PRESERVATION RULES — do NOT change any of the following: "
-    "the person's face, facial expression, hairstyle, hair colour, skin tone, "
-    "body shape, body proportions, pose, hand position, fingers, background scene, "
-    "background lighting, shadows, camera angle, camera distance, depth of field, "
-    "and all accessories (jewellery, handbag, watch, glasses, shoes, etc.)."
-)
+def detect_category_from_product_id(product_id: Optional[str]) -> str:
+    if not product_id:
+        return "dress"
+    pid = product_id.lower()
+    for keyword, category in _ALIASES.items():
+        if keyword in pid:
+            return category
+    return "dress"
 
-# ── Shared clothing replacement clause ───────────────────────────────────────
-_REPLACE = (
-    "CLOTHING REPLACEMENT RULES — replace ONLY the clothing that covers the torso "
-    "and lower body. The replacement garment must exactly match the reference product "
-    "image provided: identical colour, identical fabric texture, identical embroidery "
-    "or print pattern, identical logo or motif, identical sleeve design, identical "
-    "collar or neckline, identical border or trim, and identical overall silhouette. "
-    "The clothing must appear to fit the person's body naturally with realistic "
-    "folds, wrinkles, and draping physics. Do not simplify or idealise the garment."
-)
-
-# ── Per-category prompt templates ─────────────────────────────────────────────
-_PROMPTS: dict[str, str] = {
-    "saree": (
-        "You are a photorealistic virtual fashion try-on system. "
-        "I am giving you two images: (1) a person photo, and (2) a reference saree product image. "
-        "Your task: generate a single, photorealistic image of the SAME person wearing the EXACT saree from the reference image. "
-        f"{_PRESERVE} "
-        f"{_REPLACE} "
-        "For the saree specifically: the pallu (the draped end) must fall naturally over the left shoulder with realistic fabric drape. "
-        "The pleats at the waist must look naturally tucked. The blouse must match the reference if shown. "
-        "The saree fabric — whether silk, chiffon, georgette, cotton — must have the correct sheen and drape physics. "
-        "Output: one final photorealistic image of the person wearing the saree. No side-by-side. No text overlays."
-    ),
-
-    "lehenga": (
-        "You are a photorealistic virtual fashion try-on system. "
-        "I am giving you two images: (1) a person photo, and (2) a reference lehenga product image. "
-        "Your task: generate a single, photorealistic image of the SAME person wearing the EXACT lehenga from the reference image. "
-        f"{_PRESERVE} "
-        f"{_REPLACE} "
-        "For the lehenga specifically: the skirt must have realistic volume and fabric fall. "
-        "The choli (blouse) must match the reference exactly in embroidery and colour. "
-        "The dupatta, if present in the reference, must be draped naturally. "
-        "Heavy embroidery, zari work, or mirror work must appear three-dimensional and detailed. "
-        "Output: one final photorealistic image. No side-by-side. No text overlays."
-    ),
-
-    "kurti": (
-        "You are a photorealistic virtual fashion try-on system. "
-        "I am giving you two images: (1) a person photo, and (2) a reference kurti/kurta product image. "
-        "Your task: generate a single, photorealistic image of the SAME person wearing the EXACT kurti from the reference image. "
-        f"{_PRESERVE} "
-        f"{_REPLACE} "
-        "For the kurti specifically: match the neckline design, sleeve length, hemline length, and block print or embroidery exactly. "
-        "The fabric should have the correct drape — cotton should look structured, chiffon should look flowy. "
-        "Output: one final photorealistic image. No side-by-side. No text overlays."
-    ),
-
-    "anarkali": (
-        "You are a photorealistic virtual fashion try-on system. "
-        "I am giving you two images: (1) a person photo, and (2) a reference Anarkali suit product image. "
-        "Your task: generate a single, photorealistic image of the SAME person wearing the EXACT Anarkali suit from the reference image. "
-        f"{_PRESERVE} "
-        f"{_REPLACE} "
-        "For the Anarkali specifically: the floor-length or knee-length flared silhouette must be reproduced exactly. "
-        "The gold embroidery, sequin detailing, or printed pattern must appear realistic and detailed. "
-        "The churidar or palazzo pants underneath should be visible and match the reference. "
-        "Output: one final photorealistic image. No side-by-side. No text overlays."
-    ),
-
-    "shirt": (
-        "You are a photorealistic virtual fashion try-on system. "
-        "I am giving you two images: (1) a person photo, and (2) a reference shirt product image. "
-        "Your task: generate a single, photorealistic image of the SAME person wearing the EXACT shirt from the reference image. "
-        f"{_PRESERVE} "
-        f"{_REPLACE} "
-        "For the shirt specifically: replicate the exact collar style (button-down, spread, mandarin), button placket, "
-        "pocket position, sleeve length, cuff design, and fabric texture (Oxford weave, poplin, linen, etc.). "
-        "Shirt buttons and stitching should be clearly visible. "
-        "Output: one final photorealistic image. No side-by-side. No text overlays."
-    ),
-
-    "tshirt": (
-        "You are a photorealistic virtual fashion try-on system. "
-        "I am giving you two images: (1) a person photo, and (2) a reference t-shirt product image. "
-        "Your task: generate a single, photorealistic image of the SAME person wearing the EXACT t-shirt from the reference image. "
-        f"{_PRESERVE} "
-        f"{_REPLACE} "
-        "For the t-shirt specifically: match the exact graphic print, logo, colour, crew/v-neck style, and sleeve length. "
-        "The jersey fabric should show realistic stretch folds. "
-        "Output: one final photorealistic image. No side-by-side. No text overlays."
-    ),
-
-    "blazer": (
-        "You are a photorealistic virtual fashion try-on system. "
-        "I am giving you two images: (1) a person photo, and (2) a reference blazer/jacket product image. "
-        "Your task: generate a single, photorealistic image of the SAME person wearing the EXACT blazer from the reference image. "
-        f"{_PRESERVE} "
-        f"{_REPLACE} "
-        "For the blazer specifically: replicate the lapel style (notch, peak, shawl), button count, fit (slim, regular), "
-        "pocket style, lining visible at sleeves, and fabric texture (wool, cotton, velvet). "
-        "The structured shoulders of a blazer must be visible. "
-        "Output: one final photorealistic image. No side-by-side. No text overlays."
-    ),
-
-    "jeans": (
-        "You are a photorealistic virtual fashion try-on system. "
-        "I am giving you two images: (1) a person photo, and (2) a reference jeans/trousers product image. "
-        "Your task: generate a single, photorealistic image of the SAME person wearing the EXACT jeans from the reference image. "
-        f"{_PRESERVE} "
-        f"{_REPLACE} "
-        "For the jeans specifically: replicate the exact wash (light, dark, distressed), cut (slim, straight, bootcut, skinny), "
-        "waistband, pocket position, and any rips or embellishments shown in the reference. "
-        "Denim texture and stitching should be clearly visible. "
-        "Output: one final photorealistic image. No side-by-side. No text overlays."
-    ),
-
-    "dress": (
-        "You are a photorealistic virtual fashion try-on system. "
-        "I am giving you two images: (1) a person photo, and (2) a reference dress product image. "
-        "Your task: generate a single, photorealistic image of the SAME person wearing the EXACT dress from the reference image. "
-        f"{_PRESERVE} "
-        f"{_REPLACE} "
-        "For the dress specifically: match the neckline, sleeve style, waist definition, hemline length, "
-        "fabric drape, print pattern, and any embellishments (buttons, ruffles, lace) exactly. "
-        "Output: one final photorealistic image. No side-by-side. No text overlays."
-    ),
-}
-
-# Fallback for unrecognised categories
-_DEFAULT_PROMPT = (
-    "You are a photorealistic virtual fashion try-on system. "
-    "I am giving you two images: (1) a person photo, and (2) a reference garment product image. "
-    "Your task: generate a single, photorealistic image of the SAME person wearing the EXACT garment from the reference image. "
-    f"{_PRESERVE} "
-    f"{_REPLACE} "
-    "Output: one final photorealistic image. No side-by-side. No text overlays."
-)
-
-
-def detect_category_from_product_id(product_id: str) -> str:
+def build_prompt(
+    category: str,
+    product_name: str = "",
+    product_description: str = "",
+    product_metadata: Optional[Dict[str, Any]] = None
+) -> str:
     """
-    Infer garment category from the productId string.
-
-    Example:
-        "red-silk-saree"  → "saree"
-        "black-blazer"    → "blazer"
-        "printed-kurti"   → "kurti"
-        "white-shirt"     → "shirt"
-
-    Falls back to "saree" (most common category in the demo) if nothing matches.
+    Builds a deterministic editing prompt constrained to 80-120 words.
     """
-    product_id_lower = product_id.lower()
-    for keyword, canonical in _ALIASES.items():
-        if keyword in product_id_lower:
-            logger.debug("Detected category '%s' from productId '%s'", canonical, product_id)
-            return canonical
+    logger.info("Prompt Builder: Assembling 80-120 word editing prompt...")
+    
+    if product_metadata is None:
+        product_metadata = {}
+        
+    cat = category.lower()
+    name = product_metadata.get("name", "garment").lower()
+    desc = product_metadata.get("description", "").lower()
+    tags = ", ".join(product_metadata.get("tags", [])).lower()
+    
+    # Extract details safely
+    fabric = "its fabric"
+    color = "its primary color"
+    border = "its border"
+    pattern = "its pattern"
+    
+    if "silk" in desc or "silk" in tags: fabric = "silk"
+    elif "cotton" in desc or "cotton" in tags: fabric = "cotton"
+    elif "georgette" in desc or "georgette" in tags: fabric = "georgette"
+    elif "chiffon" in desc or "chiffon" in tags: fabric = "chiffon"
+    
+    if "red" in name or "red" in desc: color = "red"
+    elif "blue" in name or "blue" in desc: color = "blue"
+    elif "green" in name or "green" in desc: color = "green"
+    elif "purple" in name or "purple" in desc: color = "purple"
+    elif "white" in name or "white" in desc: color = "white"
+    elif "black" in name or "black" in desc: color = "black"
 
-    logger.warning("Could not detect category from productId '%s', defaulting to 'saree'", product_id)
-    return "saree"
-
-
-def build_prompt(category: str) -> str:
-    """
-    Return the try-on prompt for the given garment category.
-
-    Args:
-        category:  Garment category string (case-insensitive).
-                   May be a raw category label ("Saree", "Western")
-                   or a productId keyword ("saree", "blazer").
-
-    Returns:
-        Full prompt string ready to send to Gemini.
-    """
-    canonical = _ALIASES.get(category.lower().strip(), None)
-    if canonical is None:
-        # Try treating the whole string as a productId
-        canonical = detect_category_from_product_id(category)
-
-    prompt = _PROMPTS.get(canonical, _DEFAULT_PROMPT)
-    logger.debug("Built prompt for category '%s' (canonical='%s')", category, canonical)
-    return prompt
+    task = "TASK\nThis is an IMAGE EDITING task. Edit ONLY the first image. Do not create a new person."
+    
+    primary = "PRIMARY IMAGE\nThe first image is the immutable source. Preserve every aspect of this photograph except the clothing."
+    
+    reference = "REFERENCE IMAGE\nThe second image is ONLY a garment reference. Ignore the model, face, body, pose, background and lighting in the second image. Copy ONLY the garment."
+    
+    identity = "IDENTITY\nPreserve exactly Face, Hair, Expression, Skin tone, Body proportions, Body shape, Hands, Feet, Pose, Camera angle, Lighting, Background, Accessories, Jewelry."
+    
+    garment = "GARMENT\nReplace ONLY the clothing. Preserve exactly Fabric, Texture, Embroidery, Pattern, Print, Primary Color, Secondary Color, Border, Buttons, Collar, Sleeves, Pleats, Pallu, Natural folds, Wrinkles, Silhouette."
+    
+    if "saree" in cat or "sari" in cat:
+        category_rules = f"CATEGORY RULES\nDress the person in the exact {name} ({fabric} saree) shown in the reference image. Preserve the exact {color} color, {border} border, {pattern} design, realistic Indian draping, natural pleats, waist wrap and pallu. Do not redesign or simplify the garment."
+    elif "shirt" in cat or "tshirt" in cat or "tee" in cat:
+        category_rules = f"CATEGORY RULES\nDress the person in the exact {name} shown. Preserve collar, buttons, logo, sleeve length and fit. Do not redesign."
+    elif "kurta" in cat or "kurti" in cat:
+        category_rules = f"CATEGORY RULES\nDress the person in the exact {name} shown. Preserve embroidery, neck, sleeves and fabric. Do not redesign."
+    else:
+        category_rules = f"CATEGORY RULES\nDress the person in the exact {name} shown in the reference image preserving its fit and silhouette. Do not redesign."
+        
+    negative = "NEGATIVE RULES\nNever Generate another person, Replace the face, Modify hairstyle, Modify skin tone, Modify body shape, Modify pose, Modify lighting, Modify background, Beautify the subject, Stylize, Cartoonize, Merge old clothing with new clothing, Invent garment details."
+    
+    success = "SUCCESS\nThe output should look like the original photograph after changing clothes. The only visible difference between the source image and the final image should be the clothing."
+    
+    sections = [task, primary, reference, identity, garment, category_rules, negative, success]
+    
+    final_prompt = "\n\n".join(sections)
+    
+    word_count = len(final_prompt.split())
+    logger.info("Final Prompt Length: %d words", word_count)
+    
+    if word_count > 120 or word_count < 80:
+        logger.warning("Prompt length (%d) is outside the 80-120 word target limit!", word_count)
+    
+    return final_prompt

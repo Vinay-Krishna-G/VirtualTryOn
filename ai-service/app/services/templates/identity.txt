@@ -1,0 +1,3 @@
+4. IDENTITY CONSTRAINTS
+
+Preserve exactly identity, face, eyes, nose, mouth, hair, skin tone, expression, body proportions, body shape, hands, legs, feet, pose, camera angle, lighting, background, jewelry, and accessories. These elements are immutable.

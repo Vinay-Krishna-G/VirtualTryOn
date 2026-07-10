@@ -1,0 +1,4 @@
+8. SUCCESS CRITERIA
+
+The result must appear to be the ORIGINAL PERSON from image one wearing the garment from image two.
+A human comparing the original and edited images should conclude that only the clothing has changed.

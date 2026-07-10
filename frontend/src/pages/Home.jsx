@@ -1,5 +1,5 @@
 /**
- * pages/Home.jsx — No search bar, fully theme-aware
+ * pages/Home.jsx — Professional luxury home, editorial layout
  */
 import { useState, useRef } from "react";
 import HeroBanner from "../components/home/HeroBanner";
@@ -15,57 +15,44 @@ export default function Home({ products, categories, onSelectProduct }) {
     gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  // Filter products by gender
   const genderProducts = products.filter((p) => p.gender === activeGender);
-  
-  // Calculate dynamic categories for selected gender
   const dynamicCategories = ["All", ...new Set(genderProducts.map((p) => p.category))];
-
-  // Filter products by active category
   const filteredProducts = activeCategory === "All"
     ? genderProducts
     : genderProducts.filter((p) => p.category === activeCategory);
 
-  // If gender changes, reset category if it's not present in new gender
   if (activeCategory !== "All" && !dynamicCategories.includes(activeCategory)) {
     setActiveCategory("All");
   }
 
   return (
     <div className="page-enter">
-      <div style={{ maxWidth: "var(--max-width)", margin: "0 auto", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+      <div style={{ maxWidth: "var(--max-width)", margin: "0 auto", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "3rem" }}>
 
-        {/* ── Hero ── */}
-        <div>
-          <HeroBanner onExplore={handleExplore} />
-        </div>
+        {/* Hero */}
+        <HeroBanner onExplore={handleExplore} />
 
-        {/* ── Department & Category Filters ── */}
+        {/* Filters */}
         <div>
           {/* Gender Tabs */}
-          <div style={{
-            display: "flex", gap: "0.5rem", marginBottom: "1.25rem",
-            justifyContent: "center"
-          }}>
+          <div style={{ display: "flex", gap: "0", marginBottom: "1.5rem", borderBottom: "1px solid var(--color-border)" }}>
             {["Women", "Men"].map(gender => (
               <button
                 key={gender}
-                onClick={() => {
-                  setActiveGender(gender);
-                  setActiveCategory("All");
-                }}
+                onClick={() => { setActiveGender(gender); setActiveCategory("All"); }}
                 style={{
-                  padding: "0.5rem 1.5rem",
-                  borderRadius: "var(--radius-full)",
-                  border: `1px solid ${activeGender === gender ? "var(--color-brand)" : "var(--color-border)"}`,
-                  background: activeGender === gender ? "var(--color-brand-light)" : "transparent",
-                  color: activeGender === gender ? "var(--color-brand)" : "var(--color-text-muted)",
-                  fontSize: "0.8rem",
-                  fontWeight: "700",
+                  padding: "0.6rem 1.5rem",
+                  border: "none",
+                  borderBottom: `2px solid ${activeGender === gender ? "var(--color-brand)" : "transparent"}`,
+                  background: "transparent",
+                  color: activeGender === gender ? "var(--color-text)" : "var(--color-text-muted)",
+                  fontSize: "0.75rem",
+                  fontWeight: activeGender === gender ? "700" : "500",
                   textTransform: "uppercase",
-                  letterSpacing: "0.06em",
+                  letterSpacing: "0.08em",
                   cursor: "pointer",
-                  transition: "all 0.2s ease"
+                  transition: "all 0.2s ease",
+                  marginBottom: "-1px",
                 }}
               >
                 {gender}'s
@@ -80,25 +67,26 @@ export default function Home({ products, categories, onSelectProduct }) {
           />
         </div>
 
-        {/* ── Product Grid ── */}
+        {/* Product Grid Section */}
         <div ref={gridRef}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "1.5rem" }}>
             <div>
               <p style={{
-                fontSize: "0.6rem", fontWeight: "700", color: "var(--color-brand)",
-                textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.25rem",
+                fontSize: "0.58rem", fontWeight: "600", color: "var(--color-brand)",
+                textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "0.35rem",
               }}>
-                ✦ {activeGender}'s {activeCategory === "All" ? "Collection" : activeCategory}
+                {activeGender}'s {activeCategory === "All" ? "Collection" : activeCategory}
               </p>
               <h2 style={{
-                fontFamily: "var(--font-serif)", fontSize: "clamp(1.2rem, 3vw, 1.6rem)",
-                fontWeight: "700", color: "var(--color-text)", letterSpacing: "-0.02em",
+                fontFamily: "var(--font-serif)", fontStyle: "italic",
+                fontSize: "clamp(1.4rem, 3vw, 2rem)",
+                fontWeight: "600", color: "var(--color-text)", letterSpacing: "-0.01em",
               }}>
                 {activeCategory === "All" ? "New Arrivals" : activeCategory}
               </h2>
             </div>
-            <span style={{ fontSize: "0.78rem", color: "var(--color-text-muted)" }}>
-              {filteredProducts.length} items
+            <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", fontWeight: "500" }}>
+              {filteredProducts.length} pieces
             </span>
           </div>
 
@@ -110,50 +98,50 @@ export default function Home({ products, categories, onSelectProduct }) {
           />
         </div>
 
-        {/* ── AI Try-On Callout ── */}
+        {/* AI Try-On Feature Banner */}
         <div style={{
           borderRadius: "var(--radius-lg)", overflow: "hidden",
           border: "1px solid var(--color-border-brand)",
-          background: "var(--color-brand-light)",
-          padding: "clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 2rem)",
+          background: "linear-gradient(135deg, rgba(184,150,90,0.07) 0%, rgba(184,150,90,0.02) 100%)",
+          padding: "clamp(2rem, 4vw, 3rem) clamp(1.75rem, 4vw, 2.5rem)",
           position: "relative",
         }}>
           <div style={{
-            position: "absolute", top: "-60px", right: "-60px",
-            width: "220px", height: "220px", borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(201,169,110,0.15) 0%, transparent 70%)",
-            pointerEvents: "none",
+            position: "absolute", top: 0, right: 0, bottom: 0,
+            width: "40%", pointerEvents: "none",
+            background: "radial-gradient(circle at 80% 50%, rgba(184,150,90,0.08) 0%, transparent 70%)",
           }} />
-          <div style={{ position: "relative", zIndex: 1, maxWidth: "500px" }}>
-            <span style={{
-              display: "inline-block", fontSize: "0.6rem", fontWeight: "700",
-              color: "var(--color-brand)", textTransform: "uppercase",
-              letterSpacing: "0.12em", marginBottom: "0.75rem",
-              padding: "0.25rem 0.65rem",
-              border: "1px solid var(--color-border-brand)",
-              borderRadius: "var(--radius-full)",
+          <div style={{ position: "relative", zIndex: 1, maxWidth: "520px" }}>
+            <p style={{
+              fontSize: "0.6rem", fontWeight: "700", color: "var(--color-brand)",
+              textTransform: "uppercase", letterSpacing: "0.16em", marginBottom: "0.85rem",
+              display: "flex", alignItems: "center", gap: "8px",
             }}>
-              ✨ Powered by AI
-            </span>
+              <span style={{ width: "20px", height: "1px", background: "var(--color-brand)", display: "inline-block" }} />
+              Powered by AI
+            </p>
             <h2 style={{
-              fontFamily: "var(--font-serif)",
-              fontSize: "clamp(1.3rem, 3vw, 1.8rem)", fontWeight: "700",
-              color: "var(--color-text)", lineHeight: 1.2, marginBottom: "0.75rem",
+              fontFamily: "var(--font-serif)", fontStyle: "italic",
+              fontSize: "clamp(1.5rem, 3vw, 2.2rem)", fontWeight: "600",
+              color: "var(--color-text)", lineHeight: 1.2, marginBottom: "1rem",
             }}>
-              Try Before You Buy.{" "}
+              Try Before You Buy.<br />
               <span className="text-gold">Zero Guesswork.</span>
             </h2>
             <p style={{
               fontSize: "0.88rem", color: "var(--color-text-muted)",
-              lineHeight: "1.65", marginBottom: "1.5rem",
+              lineHeight: "1.7", marginBottom: "1.75rem", fontWeight: "400",
             }}>
-              Our AI virtually drapes any garment on your uploaded photo in under 60 seconds. 
-              See the exact fit, colour, and drape before placing your order.
+              Our AI virtually drapes any garment on your uploaded photo in under 60 seconds.
+              See the exact fit, colour, and drape — before placing your order.
             </p>
-            <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
               {["Realistic Draping", "Private & Secure", "Ready in 60s"].map((item) => (
-                <div key={item} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ color: "var(--color-brand)", fontSize: "0.8rem" }}>✓</span>
+                <div key={item} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="7" r="6.5" stroke="var(--color-brand)" strokeWidth="1"/>
+                    <polyline points="4.5,7 6.5,9 9.5,5" stroke="var(--color-brand)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                  </svg>
                   <span style={{ fontSize: "0.82rem", color: "var(--color-text-muted)", fontWeight: "500" }}>{item}</span>
                 </div>
               ))}
@@ -161,28 +149,29 @@ export default function Home({ products, categories, onSelectProduct }) {
           </div>
         </div>
 
-        {/* ── Testimonials ── */}
-        <div style={{ paddingBottom: "1rem" }}>
-          <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
+        {/* Testimonials */}
+        <div style={{ paddingBottom: "1.5rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "2rem" }}>
             <p style={{
-              fontSize: "0.6rem", fontWeight: "700", color: "var(--color-brand)",
-              textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.35rem",
+              fontSize: "0.6rem", fontWeight: "600", color: "var(--color-brand)",
+              textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "0.5rem",
             }}>
-              ✦ Real Customers
+              Client Stories
             </p>
             <h2 style={{
-              fontFamily: "var(--font-serif)",
-              fontSize: "clamp(1.2rem, 3vw, 1.7rem)", fontWeight: "700",
-              color: "var(--color-text)", letterSpacing: "-0.02em",
+              fontFamily: "var(--font-serif)", fontStyle: "italic",
+              fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: "600",
+              color: "var(--color-text)", letterSpacing: "-0.01em",
             }}>
               What Our Shoppers Say
             </h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: "1rem" }}>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
             {[
-              { name: "Priya S.", review: "Tried it on virtually, bought it instantly. The fit was perfect!", rating: "★★★★★", loc: "Mumbai" },
-              { name: "Anjali M.", review: "Saved me so many returns. This feature is a total game changer.", rating: "★★★★★", loc: "Delhi" },
-              { name: "Kavitha R.", review: "I was skeptical, but the AI preview was spot-on. Love it!", rating: "★★★★★", loc: "Bangalore" },
+              { name: "Priya S.", review: "Tried it virtually, bought it instantly. The fit was perfect — no returns needed.", rating: 5, loc: "Mumbai" },
+              { name: "Anjali M.", review: "Saved me from so many poor choices. This feature is a genuine game changer for online shopping.", rating: 5, loc: "Delhi" },
+              { name: "Kavitha R.", review: "I was sceptical, but the AI preview was spot-on. Love the confidence it gives.", rating: 5, loc: "Bangalore" },
             ].map((t) => (
               <div
                 key={t.name}
@@ -190,12 +179,12 @@ export default function Home({ products, categories, onSelectProduct }) {
                   background: "var(--color-surface)",
                   border: "1px solid var(--color-border)",
                   borderRadius: "var(--radius-md)",
-                  padding: "1.25rem",
-                  transition: "border-color 0.2s, transform 0.2s, box-shadow 0.2s",
+                  padding: "1.5rem",
+                  transition: "border-color 0.2s, transform 0.25s, box-shadow 0.25s",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = "var(--color-border-brand)";
-                  e.currentTarget.style.transform = "translateY(-3px)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
                   e.currentTarget.style.boxShadow = "var(--shadow-gold)";
                 }}
                 onMouseLeave={(e) => {
@@ -204,13 +193,23 @@ export default function Home({ products, categories, onSelectProduct }) {
                   e.currentTarget.style.boxShadow = "none";
                 }}
               >
-                <div style={{ color: "#f59e0b", fontSize: "0.8rem", marginBottom: "0.65rem" }}>{t.rating}</div>
-                <p style={{ fontSize: "0.87rem", color: "var(--color-text-muted)", lineHeight: "1.65", marginBottom: "1rem", fontStyle: "italic" }}>
+                <div style={{ display: "flex", gap: "2px", marginBottom: "0.85rem" }}>
+                  {[1,2,3,4,5].map(i => (
+                    <svg key={i} width="12" height="12" viewBox="0 0 10 10" fill="var(--color-brand)">
+                      <polygon points="5,1 6.18,3.86 9.33,4 7,5.86 7.63,9 5,7.5 2.37,9 3,5.86 0.67,4 3.82,3.86"/>
+                    </svg>
+                  ))}
+                </div>
+                <p style={{
+                  fontSize: "0.86rem", color: "var(--color-text-muted)",
+                  lineHeight: "1.7", marginBottom: "1.25rem",
+                  fontStyle: "italic", fontFamily: "var(--font-serif)",
+                }}>
                   "{t.review}"
                 </p>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--color-text)" }}>{t.name}</span>
-                  <span style={{ fontSize: "0.7rem", color: "var(--color-text-light)" }}>{t.loc}</span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--color-text-muted)" }}>{t.loc}</span>
                 </div>
               </div>
             ))}

@@ -1,0 +1,3 @@
+7. NEGATIVE CONSTRAINTS
+
+Do NOT generate another person, replace the face, beautify the person, change hairstyle, change age, change ethnicity, change body shape, change pose, change background, change lighting, change expression, change camera angle, add limbs, remove limbs, blur hands, stylize, cartoonize, hallucinate new clothing, or merge old and new clothing.

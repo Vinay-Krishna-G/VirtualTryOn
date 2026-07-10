@@ -27,6 +27,7 @@ Error philosophy:
 import logging
 import time
 import uuid
+import httpx
 from pathlib import Path
 from typing import Optional
 
@@ -37,6 +38,7 @@ from app.config import settings
 from app.services.gemini_provider import generate_tryon as gemini_generate
 from app.services.idmvton_provider import generate_tryon_idmvton
 from app.services.fashn_provider import generate_tryon_fashn
+from app.services.openai_provider import generate_tryon_openai
 from app.services.image_storage import get_image_url, save_temp_image
 from app.services.prompt_builder import detect_category_from_product_id
 
@@ -79,12 +81,19 @@ async def generate_endpoint(
     request_id = uuid.uuid4().hex[:8]
     start = time.monotonic()
 
+    # Infer product_id from garment filename if missing
+    if not product_id and garment_image and garment_image.filename:
+        product_id = garment_image.filename.rsplit(".", 1)[0]
+
     # Infer category from productId if provided
     category = detect_category_from_product_id(product_id) if product_id else "saree"
+    
+    # Fetch metadata from Node.js catalog
+    metadata = await _fetch_product_metadata(product_id)
 
     logger.info(
-        "[%s] /generate | category=%s person=%s garment=%s",
-        request_id, category,
+        "[%s] /generate | category=%s product=%s person=%s garment=%s",
+        request_id, category, product_id,
         person_image.filename, garment_image.filename,
     )
 
@@ -93,9 +102,9 @@ async def generate_endpoint(
         request_id, person_image, garment_image
     )
 
-    # ── Call Gemini ────────────────────────────────────────────────────────────
+    # ── Call AI Provider ────────────────────────────────────────────────────────
     result_bytes = await _run_ai(
-        request_id, person_bytes, garment_bytes, category, product_id or ""
+        request_id, person_bytes, garment_bytes, category, product_id or "", metadata=metadata
     )
 
     elapsed = time.monotonic() - start
@@ -135,15 +144,20 @@ async def tryon_json_endpoint(
     request_id = uuid.uuid4().hex[:8]
     start = time.monotonic()
 
+    if not product_id and garment_image and garment_image.filename:
+        product_id = garment_image.filename.rsplit(".", 1)[0]
+
     category = (
         product_category.strip()
         if product_category and product_category.strip()
         else (detect_category_from_product_id(product_id) if product_id else "saree")
     )
+    
+    metadata = await _fetch_product_metadata(product_id)
 
     logger.info(
-        "[%s] /api/try-on | category=%s person=%s garment=%s",
-        request_id, category,
+        "[%s] /api/try-on | category=%s product=%s person=%s garment=%s",
+        request_id, category, product_id,
         person_image.filename, garment_image.filename,
     )
 
@@ -160,10 +174,10 @@ async def tryon_json_endpoint(
             content={"success": False, "message": "Unable to process uploaded images."},
         )
 
-    # ── Call Gemini ────────────────────────────────────────────────────────────
+    # ── Call AI Provider ────────────────────────────────────────────────────────
     try:
         result_bytes = await _run_ai(
-            request_id, person_bytes, garment_bytes, category, product_id or ""
+            request_id, person_bytes, garment_bytes, category, product_id or "", metadata=metadata
         )
     except HTTPException as exc:
         elapsed = time.monotonic() - start
@@ -174,6 +188,7 @@ async def tryon_json_endpoint(
         )
 
     base_url = str(request.base_url).rstrip("/")
+    output_path = save_temp_image(result_bytes, folder=settings.OUTPUT_FOLDER, extension="png")
     image_url = get_image_url(output_path, base_url)
 
     elapsed = time.monotonic() - start
@@ -193,6 +208,22 @@ async def tryon_json_endpoint(
 
 
 # ── Shared helpers ─────────────────────────────────────────────────────────────
+
+async def _fetch_product_metadata(product_id: Optional[str]) -> dict:
+    """Fetch product metadata from the Node.js API to use as Ground Truth for Prompt Builder."""
+    if not product_id:
+        return {}
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get("http://127.0.0.1:3001/api/products")
+            if resp.status_code == 200:
+                data = resp.json()
+                for p in data.get("products", []):
+                    if p.get("id") == product_id:
+                        return p
+    except Exception as exc:
+        logger.warning("Failed to fetch product metadata for %s: %s", product_id, exc)
+    return {}
 
 async def _read_uploads(
     request_id: str,
@@ -256,6 +287,7 @@ async def _run_ai(
     garment_bytes: bytes,
     category: str,
     product_id: str,
+    metadata: dict = None,
 ) -> bytes:
     """
     Dispatch to the configured AI provider.
@@ -284,6 +316,13 @@ async def _run_ai(
                 garment_bytes=garment_bytes,
                 category=category,
                 product_id=product_id,
+            )
+        elif provider == "openai":
+            return await generate_tryon_openai(
+                person_bytes=person_bytes,
+                garment_bytes=garment_bytes,
+                category=category,
+                metadata=metadata,
             )
         else:
             logger.error("[%s] Unknown AI_PROVIDER: %s", request_id, provider)
@@ -328,7 +367,7 @@ async def _run_gemini(
         HTTPException with appropriate status code.
     """
     try:
-        result_bytes = await generate_tryon(
+        result_bytes = await gemini_generate(
             person_bytes=person_bytes,
             garment_bytes=garment_bytes,
             category=category,

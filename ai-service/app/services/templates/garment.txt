@@ -1,0 +1,8 @@
+5. GARMENT CONSTRAINTS
+
+Replace ONLY the clothing.
+The garment must match the reference exactly.
+Preserve fabric, texture, pattern, print, embroidery, logos, buttons, border, lace, zari, motifs, stitching, wrinkles, folds, and fit.
+Do not redesign the garment.
+Do not invent missing details.
+Do not simplify embroidery.

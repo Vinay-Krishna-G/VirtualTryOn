@@ -1,0 +1,5 @@
+1. TASK
+
+This is an IMAGE EDITING task.
+Do not generate a new photograph.
+Edit the first image only.
