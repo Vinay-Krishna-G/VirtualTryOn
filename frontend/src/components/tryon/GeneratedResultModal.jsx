@@ -16,15 +16,29 @@ export default function GeneratedResultModal({
   const [fullscreen, setFullscreen] = useState(false);
   const [shareMsg, setShareMsg] = useState("");
 
-  function handleDownload() {
-    const link = document.createElement("a");
-    link.href = resultImageUrl;
-    link.download = `virtualfit-${product.id}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setShareMsg("Saved!");
-    setTimeout(() => setShareMsg(""), 2000);
+  async function handleDownload() {
+    try {
+      setShareMsg("Saving...");
+      // Fetch the image to bypass cross-origin download restrictions
+      const response = await fetch(resultImageUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `virtualfit-${product.id}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+
+      setShareMsg("Saved!");
+      setTimeout(() => setShareMsg(""), 2000);
+    } catch (error) {
+      console.error("Failed to download image:", error);
+      setShareMsg("Failed to save");
+      setTimeout(() => setShareMsg(""), 2000);
+    }
   }
 
   useEffect(() => {

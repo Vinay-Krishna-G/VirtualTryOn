@@ -18,10 +18,17 @@ export async function generateTryOn(personImageFile, productId) {
     headers: {
       "Content-Type": "multipart/form-data",
     },
-    // We expect binary image data back
-    responseType: "blob",
+    // We expect JSON back now (job ID)
+    responseType: "json",
   });
 
-  // Convert the blob to a local URL that an <img> tag can render
-  return URL.createObjectURL(response.data);
+  // Return the job ID to be polled
+  return response.data.id;
+}
+
+export async function checkTryOnStatus(jobId) {
+  const response = await axios.get(`/api/generate/status/${jobId}`, {
+    responseType: "json",
+  });
+  return response.data;
 }

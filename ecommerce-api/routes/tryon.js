@@ -30,20 +30,7 @@ const { uploadPersonImage } = require("../middleware/uploadMiddleware");
 // Python AI service URL — matches what we'll set up in Phase 3
 const PYTHON_AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
-// Product image lookup — maps productId to the actual image file path
-// We need local file paths (not /products/... URLs) to read the files and send to Python
-const PRODUCT_IMAGE_PATHS = {
-  "red-silk-saree": "red-silk-saree.png",
-  "blue-cotton-saree": "blue-cotton-saree.png",
-  "wedding-lehenga": "wedding-lehenga.png",
-  "printed-kurti": "printed-kurti.png",
-  "designer-saree": "designer-saree.png",
-  "green-saree": "green-saree.png",
-  "white-shirt": "white-shirt.png",
-  "black-blazer": "black-blazer.png",
-  "purple-saree": "purple-saree.png",
-  "anarkali-suit": "anarkali-suit.png",
-};
+
 
 // ── Route: POST /api/generate ─────────────────────────────────────────────────
 /**
@@ -93,11 +80,12 @@ router.post(
     }
 
     // ── Find the garment image path ───────────────────────────────────────────
-    const garmentFileName = PRODUCT_IMAGE_PATHS[productId];
-    if (!garmentFileName) {
+    const garmentFileName = `${productId}.png`;
+    
+    if (!productId) {
       return res.status(404).json({
         success: false,
-        error: `Product '${productId}' not found.`,
+        error: `Product ID is missing.`,
       });
     }
 
@@ -146,48 +134,55 @@ router.post(
       });
 
       // Send to Python
-      // responseType: "arraybuffer" means we want raw binary data back,
-      // not a string or JSON. The AI service returns an image file.
+      // We expect JSON back because we upgraded to the async architecture
       const pythonResponse = await axios.post(
         `${PYTHON_AI_SERVICE_URL}/generate`,
         pythonFormData,
         {
           headers: {
-            // FormData has its own headers (including the boundary for multipart)
-            // We must spread them, otherwise the request will be malformed
             ...pythonFormData.getHeaders(),
           },
-          responseType: "arraybuffer",
-          timeout: 600000, // 10-minute timeout (HuggingFace free spaces queue can be slow)
+          responseType: "json",
+          timeout: 600000,
         }
       );
 
-      // ── Return the generated image to React ──────────────────────────────────
-      // We set the Content-Type header so the browser knows it's an image
-      res.set("Content-Type", "image/png");
-      res.send(pythonResponse.data);
+      // ── Return the job ID to React ──────────────────────────────────
+      res.json(pythonResponse.data);
 
     } catch (error) {
-      // Log the full error for debugging
       console.error("Error calling Python AI service:", error.message);
+      if (error.response) {
+        console.error("Python response:", error.response.data);
+      }
 
-      // Don't expose internal error details to the client in production
       res.status(500).json({
         success: false,
         error: "AI generation failed. Please try again.",
-        // In development, include more detail:
         detail: process.env.NODE_ENV === "production" ? undefined : error.message,
       });
 
     } finally {
       // ── Clean up the uploaded file ─────────────────────────────────────────
-      // We no longer need the person's photo on disk after sending it to Python.
-      // Leaving it would waste storage over time.
       if (uploadedPersonImage && fs.existsSync(uploadedPersonImage.path)) {
         fs.unlinkSync(uploadedPersonImage.path);
       }
     }
   }
 );
+
+// ── Route: GET /api/generate/status/:id ───────────────────────────────────────
+router.get("/status/:id", async (req, res) => {
+  try {
+    const pythonResponse = await axios.get(
+      `${PYTHON_AI_SERVICE_URL}/api/try-on/status/${req.params.id}`,
+      { responseType: "json" }
+    );
+    res.json(pythonResponse.data);
+  } catch (error) {
+    console.error("Error fetching status from Python:", error.message);
+    res.status(500).json({ success: false, error: "Failed to fetch status." });
+  }
+});
 
 module.exports = router;

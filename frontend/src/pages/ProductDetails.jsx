@@ -6,7 +6,7 @@ import { useState } from "react";
 import { formatPrice } from "../mock/products";
 import TryOnModal from "../components/tryon/TryOnModal";
 import GeneratedResultModal from "../components/tryon/GeneratedResultModal";
-import { generateTryOn } from "../services/tryonService";
+import { generateTryOn, checkTryOnStatus } from "../services/tryonService";
 
 export default function ProductDetails({ product, onBack }) {
   const [isTryOnOpen, setIsTryOnOpen] = useState(false);
@@ -21,10 +21,24 @@ export default function ProductDetails({ product, onBack }) {
     const preview = URL.createObjectURL(file);
     setUploadedPreviewUrl(preview);
     try {
-      const blobUrl = await generateTryOn(file, product.id);
-      setResultImageUrl(blobUrl);
-      setIsTryOnOpen(false);
-      setIsResultOpen(true);
+      const jobId = await generateTryOn(file, product.id);
+      if (!jobId) throw new Error("No job ID returned from server.");
+
+      let isDone = false;
+      while (!isDone) {
+        await new Promise(r => setTimeout(r, 3000)); // Poll every 3 seconds
+        const statusData = await checkTryOnStatus(jobId);
+
+        if (statusData.status === "completed") {
+          setResultImageUrl(statusData.image_url);
+          setIsTryOnOpen(false);
+          setIsResultOpen(true);
+          isDone = true;
+        } else if (statusData.status === "failed") {
+          alert("Generation failed on server.");
+          isDone = true;
+        }
+      }
     } catch (error) {
       console.error("Try-on generation failed:", error);
       alert("Generation failed. Please try again.");

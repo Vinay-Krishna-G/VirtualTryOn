@@ -35,12 +35,9 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
 
 from app.config import settings
-from app.services.gemini_provider import generate_tryon as gemini_generate
-from app.services.idmvton_provider import generate_tryon_idmvton
-from app.services.fashn_provider import generate_tryon_fashn
-from app.services.openai_provider import generate_tryon_openai
+import asyncio
 from app.services.image_storage import get_image_url, save_temp_image
-from app.services.prompt_builder import detect_category_from_product_id
+from app.services.engines.fashn_engine import fashn_engine
 
 logger = logging.getLogger(__name__)
 
@@ -85,12 +82,24 @@ async def generate_endpoint(
     if not product_id and garment_image and garment_image.filename:
         product_id = garment_image.filename.rsplit(".", 1)[0]
 
-    # Infer category from productId if provided
-    category = detect_category_from_product_id(product_id) if product_id else "saree"
-    
-    # Fetch metadata from Node.js catalog
-    metadata = await _fetch_product_metadata(product_id)
-
+    # Legacy endpoint doesn't send prompt metadata, so we generate a smart prompt here.
+    prod_lower = (product_id or "").lower()
+    if "shirt" in prod_lower:
+        category = "shirt"
+    elif "kurti" in prod_lower or "kurta" in prod_lower:
+        category = "kurta"
+    elif "lehenga" in prod_lower:
+        category = "lehenga"
+    else:
+        category = "saree" # Default fallback
+        
+    base_prompt = "The garment must conform to the person's existing body. Never alter the person's body measurements or silhouette to fit the garment; instead, fit the garment to the person's original body."
+    if category == "saree":
+        smart_prompt = f"traditional indian saree drape, {base_prompt}"
+    else:
+        smart_prompt = f"perfectly fitted {category}, {base_prompt}"
+        
+    metadata = {"prompt": smart_prompt}
     logger.info(
         "[%s] /generate | category=%s product=%s person=%s garment=%s",
         request_id, category, product_id,
@@ -103,15 +112,14 @@ async def generate_endpoint(
     )
 
     # ── Call AI Provider ────────────────────────────────────────────────────────
-    result_bytes = await _run_ai(
+    result = await _run_ai(
         request_id, person_bytes, garment_bytes, category, product_id or "", metadata=metadata
     )
 
     elapsed = time.monotonic() - start
-    logger.info("[%s] /generate SUCCESS | time=%.2fs size=%dB", request_id, elapsed, len(result_bytes))
+    logger.info("[%s] /generate SUCCESS | time=%.2fs", request_id, elapsed)
 
-    # Return raw PNG — Node.js reads this as arraybuffer and forwards to React
-    return Response(content=result_bytes, media_type="image/png")
+    return JSONResponse(status_code=200, content=result)
 
 
 # ── POST /api/try-on ───────────────────────────────────────────────────────────
@@ -147,13 +155,27 @@ async def tryon_json_endpoint(
     if not product_id and garment_image and garment_image.filename:
         product_id = garment_image.filename.rsplit(".", 1)[0]
 
-    category = (
-        product_category.strip()
-        if product_category and product_category.strip()
-        else (detect_category_from_product_id(product_id) if product_id else "saree")
-    )
+    # Try-On Max does not require a category or product ID
+    # Any specific user prompts can be passed via form data in the future
+    category = product_category.strip() if product_category else "saree"
     
-    metadata = await _fetch_product_metadata(product_id)
+    prod_lower = (product_id or category).lower()
+    if "shirt" in prod_lower:
+        inferred_cat = "shirt"
+    elif "kurti" in prod_lower or "kurta" in prod_lower:
+        inferred_cat = "kurta"
+    elif "lehenga" in prod_lower:
+        inferred_cat = "lehenga"
+    else:
+        inferred_cat = "saree"
+        
+    base_prompt = "preserve original body shape, match exact skin tone, natural pose, realistic proportions. The garment must conform to the person's existing body. Never alter the person's body measurements or silhouette to fit the garment; instead, fit the garment to the person's original body."
+    if inferred_cat == "saree":
+        smart_prompt = f"traditional indian saree drape, {base_prompt}"
+    else:
+        smart_prompt = f"perfectly fitted {inferred_cat}, {base_prompt}"
+        
+    metadata = {"prompt": smart_prompt}
 
     logger.info(
         "[%s] /api/try-on | category=%s product=%s person=%s garment=%s",
@@ -176,7 +198,7 @@ async def tryon_json_endpoint(
 
     # ── Call AI Provider ────────────────────────────────────────────────────────
     try:
-        result_bytes = await _run_ai(
+        result = await _run_ai(
             request_id, person_bytes, garment_bytes, category, product_id or "", metadata=metadata
         )
     except HTTPException as exc:
@@ -187,43 +209,28 @@ async def tryon_json_endpoint(
             content={"success": False, "message": "Unable to generate image."},
         )
 
-    base_url = str(request.base_url).rstrip("/")
-    output_path = save_temp_image(result_bytes, folder=settings.OUTPUT_FOLDER, extension="png")
-    image_url = get_image_url(output_path, base_url)
-
     elapsed = time.monotonic() - start
-    logger.info(
-        "[%s] /api/try-on SUCCESS | time=%.2fs size=%dB url=%s",
-        request_id, elapsed, len(result_bytes), image_url,
-    )
+    logger.info("[%s] /api/try-on SUCCESS | time=%.2fs", request_id, elapsed)
 
     return JSONResponse(
         status_code=200,
         content={
             "success": True,
-            "imageUrl": image_url,
+            "prediction_id": result.get("id"),
             "generationTime": round(elapsed, 2),
         },
     )
 
+@router.get("/api/try-on/status/{prediction_id}")
+async def get_tryon_status(prediction_id: str):
+    """
+    Check the status of a try-on generation.
+    """
+    status = await fashn_engine.check_status(prediction_id)
+    return JSONResponse(content=status)
 
-# ── Shared helpers ─────────────────────────────────────────────────────────────
 
-async def _fetch_product_metadata(product_id: Optional[str]) -> dict:
-    """Fetch product metadata from the Node.js API to use as Ground Truth for Prompt Builder."""
-    if not product_id:
-        return {}
-    try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            resp = await client.get("http://127.0.0.1:3001/api/products")
-            if resp.status_code == 200:
-                data = resp.json()
-                for p in data.get("products", []):
-                    if p.get("id") == product_id:
-                        return p
-    except Exception as exc:
-        logger.warning("Failed to fetch product metadata for %s: %s", product_id, exc)
-    return {}
+
 
 async def _read_uploads(
     request_id: str,
@@ -247,8 +254,10 @@ async def _read_uploads(
         HTTPException 422: Unsupported file format.
     """
     try:
-        person_bytes = await person_image.read()
-        garment_bytes = await garment_image.read()
+        person_bytes, garment_bytes = await asyncio.gather(
+            person_image.read(),
+            garment_image.read()
+        )
     except Exception as exc:
         logger.error("[%s] Failed to read upload streams: %s", request_id, exc)
         raise HTTPException(status_code=400, detail="Failed to read uploaded files.")
@@ -288,7 +297,7 @@ async def _run_ai(
     category: str,
     product_id: str,
     metadata: dict = None,
-) -> bytes:
+) -> dict:
     """
     Dispatch to the configured AI provider.
     AI_PROVIDER=idmvton  → IDM-VTON HuggingFace Space (free)
@@ -298,37 +307,17 @@ async def _run_ai(
     logger.info("[%s] Using AI provider: %s", request_id, provider)
 
     try:
-        if provider == "idmvton":
-            return await generate_tryon_idmvton(
+        if provider == "fashn_api":
+            return await fashn_engine.generate(
                 person_bytes=person_bytes,
                 garment_bytes=garment_bytes,
-                category=category,
-            )
-        elif provider == "fashn":
-            return await generate_tryon_fashn(
-                person_bytes=person_bytes,
-                garment_bytes=garment_bytes,
-                category=category,
-            )
-        elif provider == "gemini":
-            return await gemini_generate(
-                person_bytes=person_bytes,
-                garment_bytes=garment_bytes,
-                category=category,
-                product_id=product_id,
-            )
-        elif provider == "openai":
-            return await generate_tryon_openai(
-                person_bytes=person_bytes,
-                garment_bytes=garment_bytes,
-                category=category,
-                metadata=metadata,
+                metadata=metadata or {}
             )
         else:
             logger.error("[%s] Unknown AI_PROVIDER: %s", request_id, provider)
             raise HTTPException(
                 status_code=500,
-                detail=f"Unknown AI_PROVIDER '{provider}'. Use 'idmvton' or 'gemini'.",
+                detail=f"Unknown AI_PROVIDER '{provider}'. Use 'fashn_api'.",
             )
 
     except HTTPException:
@@ -349,65 +338,3 @@ async def _run_ai(
         logger.exception("[%s] Unexpected error: %s", request_id, exc)
         raise HTTPException(status_code=500, detail="An unexpected error occurred.")
 
-
-async def _run_gemini(
-    request_id: str,
-    person_bytes: bytes,
-    garment_bytes: bytes,
-    category: str,
-    product_id: str,
-) -> bytes:
-    """
-    Call gemini_provider.generate_tryon and map exceptions to HTTPExceptions.
-
-    The Gemini provider raises clean Python built-ins.
-    We map them to appropriate HTTP status codes here.
-
-    Raises:
-        HTTPException with appropriate status code.
-    """
-    try:
-        result_bytes = await gemini_generate(
-            person_bytes=person_bytes,
-            garment_bytes=garment_bytes,
-            category=category,
-            product_id=product_id,
-        )
-        return result_bytes
-
-    except ValueError as exc:
-        # Invalid API key or missing config
-        logger.error("[%s] Gemini config error: %s", request_id, exc)
-        raise HTTPException(status_code=500, detail="AI service configuration error.")
-
-    except PermissionError as exc:
-        # Quota exceeded
-        logger.warning("[%s] Gemini quota exceeded: %s", request_id, exc)
-        raise HTTPException(
-            status_code=429,
-            detail="AI service is temporarily unavailable. Please try again later.",
-        )
-
-    except TimeoutError as exc:
-        # Timeout
-        logger.warning("[%s] Gemini timeout: %s", request_id, exc)
-        raise HTTPException(
-            status_code=504,
-            detail="AI generation timed out. Please try again.",
-        )
-
-    except RuntimeError as exc:
-        # All other Gemini failures
-        logger.error("[%s] Gemini runtime error: %s", request_id, exc)
-        raise HTTPException(
-            status_code=500,
-            detail="Image generation failed. Please try again.",
-        )
-
-    except Exception as exc:
-        # Unexpected
-        logger.exception("[%s] Unexpected error during generation: %s", request_id, exc)
-        raise HTTPException(
-            status_code=500,
-            detail="An unexpected error occurred. Please try again.",
-        )

@@ -15,15 +15,19 @@ from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
-
 class Settings(BaseSettings):
     """Application-wide settings loaded from environment / .env file."""
 
-    # ── Gemini ─────────────────────────────────────────────────────────────────
-    GEMINI_API_KEY: str = ""
-
-    # ── OpenAI ─────────────────────────────────────────────────────────────────
-    OPENAI_API_KEY: str = ""
+    FASHN_API_KEY: str = ""
+    FASHN_MODEL: str = "tryon-max"
+    FASHN_RESOLUTION: str = "1k"
+    FASHN_GENERATION_MODE: str = "fast"
+    FASHN_TIMEOUT: float = 200.0
+    FASHN_MAX_POLL_ATTEMPTS: int = 30
+    FASHN_INITIAL_POLL_INTERVAL: float = 1.0
+    FASHN_MAX_POLL_INTERVAL: float = 5.0
+    FASHN_OUTPUT_FORMAT: str = "png"
+    FASHN_RETURN_BASE64: bool = False
 
     # ── File storage ───────────────────────────────────────────────────────────
     # Paths are relative to the ai-service root directory
@@ -57,13 +61,12 @@ class Settings(BaseSettings):
     # ── AI Provider ────────────────────────────────────────────────────────────
     # Which AI backend to use for image generation.
     # Options:
-    #   "gemini"  — Google Gemini image generation (requires paid plan)
-    #   "idmvton" — IDM-VTON on HuggingFace Spaces (free, no API key needed)
-    #   "fashn"   — fashn-vton-1.5 on HuggingFace Spaces
-    #   "openai"  — OpenAI DALL-E 3 image generation (requires OPENAI_API_KEY)
-    AI_PROVIDER: str = "openai"
+    #   "fashn_api" — Official FASHN Try-On API (requires FASHN_API_KEY)
+    #   "gemini"    — Google Gemini image generation (requires paid plan)
+    #   "idmvton"   — IDM-VTON on HuggingFace Spaces (free, no API key needed)
+    AI_PROVIDER: str = "fashn_api"
 
-    # Optional token for HuggingFace (used by fashn/idmvton to bypass ZeroGPU limits)
+    # Optional token for HuggingFace (used by idmvton to bypass ZeroGPU limits)
     HF_TOKEN: Optional[str] = None
 
     model_config = SettingsConfigDict(
