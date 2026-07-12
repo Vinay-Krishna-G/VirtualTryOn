@@ -62,7 +62,7 @@ router.post(
   async (req, res) => {
     // After Multer runs, the uploaded file info is at req.file
     const uploadedPersonImage = req.file;
-    const { productId } = req.body;
+    const { productId, size } = req.body;
 
     // ── Validate inputs ───────────────────────────────────────────────────────
     if (!uploadedPersonImage) {
@@ -80,7 +80,8 @@ router.post(
     }
 
     // ── Find the garment image path ───────────────────────────────────────────
-    const garmentFileName = `${productId}.png`;
+    const garmentFileName = size ? `${productId}_${size}.png` : `${productId}.png`;
+    console.log(`[Node Gateway] Try-On Request received. Product: ${productId}, Size: ${size || 'default'}, Resolved File: ${garmentFileName}`);
     
     if (!productId) {
       return res.status(404).json({
@@ -151,17 +152,13 @@ router.post(
       res.json(pythonResponse.data);
 
     } catch (error) {
-      console.error("Error calling Python AI service:", error.message);
-      if (error.response) {
-        console.error("Python response:", error.response.data);
-      }
-
-      res.status(500).json({
+      console.error("[Node Gateway] Error calling Python AI Service:", error.message);
+      
+      return res.status(500).json({
         success: false,
         error: "AI generation failed. Please try again.",
-        detail: process.env.NODE_ENV === "production" ? undefined : error.message,
+        detail: error.response?.data || error.message,
       });
-
     } finally {
       // ── Clean up the uploaded file ─────────────────────────────────────────
       if (uploadedPersonImage && fs.existsSync(uploadedPersonImage.path)) {

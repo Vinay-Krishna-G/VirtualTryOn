@@ -15,13 +15,19 @@ export default function ProductDetails({ product, onBack }) {
   const [resultImageUrl, setResultImageUrl] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [selectedSize, setSelectedSize] = useState("L");
+
+  // Dynamically compute the image URL to display based on the selected size
+  const displayImage = (product.hasSizes && selectedSize) 
+    ? `/products/${product.id}_${selectedSize}.png`
+    : product.image;
 
   async function handleGenerate(file) {
     setIsGenerating(true);
     const preview = URL.createObjectURL(file);
     setUploadedPreviewUrl(preview);
     try {
-      const jobId = await generateTryOn(file, product.id);
+      const jobId = await generateTryOn(file, product.id, product.hasSizes ? selectedSize : null);
       if (!jobId) throw new Error("No job ID returned from server.");
 
       let isDone = false;
@@ -86,7 +92,7 @@ export default function ProductDetails({ product, onBack }) {
             <div className="skeleton" style={{ position: "absolute", inset: 0, borderRadius: 0, zIndex: 1 }} />
           )}
           <img
-            src={product.image}
+            src={displayImage}
             alt={product.name}
             onLoad={() => setImgLoaded(true)}
             style={{
@@ -167,6 +173,34 @@ export default function ProductDetails({ product, onBack }) {
           </div>
 
           {/* AI Try-On */}
+          {product.hasSizes && (
+            <div style={{ marginBottom: "1.5rem" }}>
+              <p style={{ fontSize: "0.8rem", fontWeight: "600", marginBottom: "0.5rem" }}>Select Garment Source Size</p>
+              <div style={{ display: "flex", gap: "10px" }}>
+                {["L", "XL", "XXL"].map(size => (
+                  <button
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    style={{
+                      flex: 1,
+                      padding: "0.6rem 0",
+                      background: selectedSize === size ? "var(--color-brand)" : "transparent",
+                      color: selectedSize === size ? "#fff" : "var(--color-text)",
+                      border: `1px solid ${selectedSize === size ? "var(--color-brand)" : "var(--color-border)"}`,
+                      borderRadius: "var(--radius-sm)",
+                      cursor: "pointer",
+                      fontWeight: "600",
+                      fontSize: "0.85rem",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{
             background: "linear-gradient(135deg, rgba(184,150,90,0.06), rgba(184,150,90,0.02))",
             border: "1px solid var(--color-border-brand)",
@@ -320,7 +354,7 @@ export default function ProductDetails({ product, onBack }) {
 
       {isTryOnOpen && (
         <TryOnModal
-          product={product}
+          product={{ ...product, image: displayImage }}
           onClose={() => setIsTryOnOpen(false)}
           onGenerate={handleGenerate}
           isGenerating={isGenerating}

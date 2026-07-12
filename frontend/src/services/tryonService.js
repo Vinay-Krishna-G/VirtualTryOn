@@ -8,10 +8,13 @@
 
 import axios from "axios";
 
-export async function generateTryOn(personImageFile, productId) {
+export async function generateTryOn(personImageFile, productId, size) {
   const formData = new FormData();
   formData.append("personImage", personImageFile);
   formData.append("productId", productId);
+  if (size) {
+    formData.append("size", size);
+  }
 
   // The Vite proxy routes this to the Node.js backend (localhost:3001)
   const response = await axios.post("/api/generate", formData, {

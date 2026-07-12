@@ -90,12 +90,20 @@ async def generate_endpoint(
         category = "kurta"
     elif "lehenga" in prod_lower:
         category = "lehenga"
+    elif "suit" in prod_lower or "blazer" in prod_lower:
+        category = "suit"
+    elif "top" in prod_lower or "blouse" in prod_lower:
+        category = "top"
+    elif "jeans" in prod_lower or "pant" in prod_lower or "trouser" in prod_lower:
+        category = "jeans"
     else:
         category = "saree" # Default fallback
         
     base_prompt = "The garment must conform to the person's existing body. Never alter the person's body measurements or silhouette to fit the garment; instead, fit the garment to the person's original body."
     if category == "saree":
         smart_prompt = f"traditional indian saree drape, {base_prompt}"
+    elif category == "suit":
+        smart_prompt = f"perfectly fitted formal suit, {base_prompt}"
     else:
         smart_prompt = f"perfectly fitted {category}, {base_prompt}"
         
@@ -166,12 +174,20 @@ async def tryon_json_endpoint(
         inferred_cat = "kurta"
     elif "lehenga" in prod_lower:
         inferred_cat = "lehenga"
+    elif "suit" in prod_lower or "blazer" in prod_lower:
+        inferred_cat = "suit"
+    elif "top" in prod_lower or "blouse" in prod_lower:
+        inferred_cat = "top"
+    elif "jeans" in prod_lower or "pant" in prod_lower or "trouser" in prod_lower:
+        inferred_cat = "jeans"
     else:
         inferred_cat = "saree"
         
     base_prompt = "preserve original body shape, match exact skin tone, natural pose, realistic proportions. The garment must conform to the person's existing body. Never alter the person's body measurements or silhouette to fit the garment; instead, fit the garment to the person's original body."
     if inferred_cat == "saree":
         smart_prompt = f"traditional indian saree drape, {base_prompt}"
+    elif inferred_cat == "suit":
+        smart_prompt = f"perfectly fitted formal suit, {base_prompt}"
     else:
         smart_prompt = f"perfectly fitted {inferred_cat}, {base_prompt}"
         
