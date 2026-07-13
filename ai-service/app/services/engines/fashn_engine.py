@@ -112,7 +112,10 @@ class FashnTryOnEngine(TryOnEngine):
                 "prompt": prompt
             }
         }
-        
+        if settings.MOCK_AI:
+            logger.info("MOCK_AI is enabled. Skipping FASHN API generation.")
+            return {"id": "mock-fashn-id"}
+            
         t_submit_start = time.monotonic()
         
         try:
@@ -148,6 +151,12 @@ class FashnTryOnEngine(TryOnEngine):
         Returns:
             {"status": "processing"|"completed"|"failed", "image_url": "..."}
         """
+        if settings.MOCK_AI and prediction_id == "mock-fashn-id":
+            return {
+                "status": "completed", 
+                "image_url": "https://via.placeholder.com/512x768.png?text=Mock+FASHN+Result"
+            }
+            
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"

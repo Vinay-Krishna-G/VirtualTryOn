@@ -47,6 +47,10 @@ export default function ProductDetails({ product, onBack }) {
       }
     } catch (error) {
       console.error("Try-on generation failed:", error);
+      if (error.response?.data?.error?.includes("QUALITY_REJECTED") || 
+          (error.response?.data instanceof Blob && error.message.includes("400"))) {
+        throw error;
+      }
       alert("Generation failed. Please try again.");
     } finally {
       setIsGenerating(false);

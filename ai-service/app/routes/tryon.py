@@ -38,10 +38,49 @@ from app.config import settings
 import asyncio
 from app.services.image_storage import get_image_url, save_temp_image
 from app.services.engines.fashn_engine import fashn_engine
+from app.services.pipeline.orchestrator import PreprocessingOrchestrator
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+# ── POST /api/try-on/enhance ──────────────────────────────────────────────────
+@router.post("/api/try-on/enhance")
+async def enhance_endpoint(
+    person_image: UploadFile = File(..., description="Full-body photo of the person to enhance")
+):
+    """
+    POST /api/try-on/enhance
+    Enhances an image (CLAHE, Denoise, Sharpen) and returns the raw JPEG bytes.
+    """
+    request_id = uuid.uuid4().hex[:8]
+    start = time.monotonic()
+    
+    try:
+        person_bytes = await person_image.read()
+    except Exception as exc:
+        logger.error("[%s] Failed to read upload stream: %s", request_id, exc)
+        raise HTTPException(status_code=400, detail="Failed to read uploaded file.")
+        
+    if not person_bytes:
+        raise HTTPException(status_code=400, detail="Person image is empty or missing.")
+        
+    # Run Orchestrator Pipeline
+    ctx = PreprocessingOrchestrator.run(person_bytes)
+    
+    if not ctx.validation.is_valid:
+        error_msg = f"{' '.join(ctx.validation.quality.reasons)} {' '.join(ctx.validation.quality.recommendations)}"
+        logger.warning("[%s] Pipeline rejected image during enhancement: %s", request_id, error_msg)
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": error_msg}
+        )
+        
+    elapsed = time.monotonic() - start
+    logger.info("[%s] /api/try-on/enhance SUCCESS | time=%.2fs", request_id, elapsed)
+    
+    return Response(content=ctx.enhanced_bytes, media_type="image/jpeg")
 
 
 # ── POST /generate ─────────────────────────────────────────────────────────────
@@ -86,7 +125,9 @@ async def generate_endpoint(
     prod_lower = (product_id or "").lower()
     if "shirt" in prod_lower:
         category = "shirt"
-    elif "kurti" in prod_lower or "kurta" in prod_lower:
+    elif "kurti" in prod_lower:
+        category = "kurti"
+    elif "kurta" in prod_lower:
         category = "kurta"
     elif "lehenga" in prod_lower:
         category = "lehenga"
@@ -96,6 +137,8 @@ async def generate_endpoint(
         category = "top"
     elif "jeans" in prod_lower or "pant" in prod_lower or "trouser" in prod_lower:
         category = "jeans"
+    elif "outfit" in prod_lower or "set" in prod_lower or "co-ord" in prod_lower:
+        category = "outfit"
     else:
         category = "saree" # Default fallback
         
@@ -119,13 +162,25 @@ async def generate_endpoint(
         request_id, person_image, garment_image
     )
 
+    # ── Pipeline Preprocessing ────────────────────────────────────────────────
+    ctx = PreprocessingOrchestrator.run(person_bytes)
+    if not ctx.validation.is_valid:
+        error_msg = f"Image rejected. {' '.join(ctx.validation.quality.reasons)} {' '.join(ctx.validation.quality.recommendations)}"
+        logger.warning("[%s] Pipeline rejected image: %s", request_id, error_msg)
+        return Response(content=f"Error: {error_msg}".encode("utf-8"), status_code=400)
+    person_bytes = ctx.enhanced_bytes
+
     # ── Call AI Provider ────────────────────────────────────────────────────────
     result = await _run_ai(
         request_id, person_bytes, garment_bytes, category, product_id or "", metadata=metadata
     )
 
     elapsed = time.monotonic() - start
-    logger.info("[%s] /generate SUCCESS | time=%.2fs", request_id, elapsed)
+
+    logger.info(
+        "[%s] /generate SUCCESS | time=%.2fs | pipeline_metrics=%s", 
+        request_id, elapsed, ctx.metrics
+    )
 
     return JSONResponse(status_code=200, content=result)
 
@@ -170,7 +225,9 @@ async def tryon_json_endpoint(
     prod_lower = (product_id or category).lower()
     if "shirt" in prod_lower:
         inferred_cat = "shirt"
-    elif "kurti" in prod_lower or "kurta" in prod_lower:
+    elif "kurti" in prod_lower:
+        inferred_cat = "kurti"
+    elif "kurta" in prod_lower:
         inferred_cat = "kurta"
     elif "lehenga" in prod_lower:
         inferred_cat = "lehenga"
@@ -180,6 +237,8 @@ async def tryon_json_endpoint(
         inferred_cat = "top"
     elif "jeans" in prod_lower or "pant" in prod_lower or "trouser" in prod_lower:
         inferred_cat = "jeans"
+    elif "outfit" in prod_lower or "set" in prod_lower or "co-ord" in prod_lower:
+        inferred_cat = "outfit"
     else:
         inferred_cat = "saree"
         
@@ -212,11 +271,24 @@ async def tryon_json_endpoint(
             content={"success": False, "message": "Unable to process uploaded images."},
         )
 
+    # ── Pipeline Preprocessing ────────────────────────────────────────────────
+    ctx = PreprocessingOrchestrator.run(person_bytes)
+    if not ctx.validation.is_valid:
+        error_msg = f"Image rejected. {' '.join(ctx.validation.quality.reasons)} {' '.join(ctx.validation.quality.recommendations)}"
+        logger.warning("[%s] Pipeline rejected image: %s", request_id, error_msg)
+        elapsed = time.monotonic() - start
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": error_msg},
+        )
+    person_bytes = ctx.enhanced_bytes
+
     # ── Call AI Provider ────────────────────────────────────────────────────────
     try:
         result = await _run_ai(
             request_id, person_bytes, garment_bytes, category, product_id or "", metadata=metadata
         )
+
     except HTTPException as exc:
         elapsed = time.monotonic() - start
         logger.error("[%s] /api/try-on FAILED at generation | reason=%s time=%.2fs", request_id, exc.detail, elapsed)
@@ -324,10 +396,12 @@ async def _run_ai(
 
     try:
         if provider == "fashn_api":
+            meta = metadata or {}
+            meta["category"] = category
             return await fashn_engine.generate(
                 person_bytes=person_bytes,
                 garment_bytes=garment_bytes,
-                metadata=metadata or {}
+                metadata=meta
             )
         else:
             logger.error("[%s] Unknown AI_PROVIDER: %s", request_id, provider)

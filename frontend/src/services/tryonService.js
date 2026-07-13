@@ -35,3 +35,18 @@ export async function checkTryOnStatus(jobId) {
   });
   return response.data;
 }
+
+export async function apiEnhanceImage(personImageFile) {
+  const formData = new FormData();
+  formData.append("personImage", personImageFile);
+
+  const response = await axios.post("/api/generate/enhance", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    responseType: "blob", // Expecting binary image data back
+  });
+
+  // Convert the returned blob into an object URL so it can be displayed
+  return URL.createObjectURL(response.data);
+}

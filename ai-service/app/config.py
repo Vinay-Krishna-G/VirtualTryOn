@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     # Set MOCK_AI=true in .env to skip Gemini entirely and return a test image.
     # Use this to test the full pipeline (React → Node → FastAPI → display)
     # without spending any API credits.
-    MOCK_AI: bool = False
+    MOCK_AI: bool = True
 
     # ── AI Provider ────────────────────────────────────────────────────────────
     # Which AI backend to use for image generation.
@@ -68,6 +68,17 @@ class Settings(BaseSettings):
 
     # Optional token for HuggingFace (used by idmvton to bypass ZeroGPU limits)
     HF_TOKEN: Optional[str] = None
+
+    # "?"? CV Pipeline Configuration "?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?
+    QUALITY_THRESHOLD: float = 75.0
+    ENABLE_ENHANCEMENT: bool = True
+    ENABLE_CLAHE: bool = True
+    ENABLE_DENOISE: bool = True
+    ENABLE_SHARPEN: bool = True
+    ENABLE_POSE_CHECK: bool = True
+    ENABLE_FAILURE_DETECTION: bool = True
+    MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024
+    MIN_IMAGE_SIZE: int = 256
 
     model_config = SettingsConfigDict(
         env_file=".env",

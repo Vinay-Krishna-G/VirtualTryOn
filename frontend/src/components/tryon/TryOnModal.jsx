@@ -4,9 +4,15 @@
  */
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+import ReactCrop from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
+import getCroppedImg from "../../utils/cropUtils";
+import { apiEnhanceImage } from "../../services/tryonService";
+import PhotoGuidelines from "./PhotoGuidelines";
 
 const STEPS = [
   { id: "upload", label: "Upload Photo" },
+  { id: "crop", label: "Crop Photo" },
   { id: "review", label: "Review & Generate" },
 ];
 
@@ -16,7 +22,16 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showGuidelines, setShowGuidelines] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Cropping State
+  const [crop, setCrop] = useState();
+  const [completedCrop, setCompletedCrop] = useState(null);
+  const [isCropping, setIsCropping] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [enhanceImage, setEnhanceImage] = useState(false);
+  const imgRef = useRef(null);
 
   const processFile = useCallback((file) => {
     setErrorMessage("");
@@ -30,7 +45,7 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
     }
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
-    setStep("review");
+    setStep("crop"); // go to crop instead of review
   }, []);
 
   function handleFileChange(e) {
@@ -51,11 +66,78 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
     setPreviewUrl(null);
     setStep("upload");
     setErrorMessage("");
+    setCrop(undefined);
+    setCompletedCrop(null);
+    setIsExpanded(false);
+    setEnhanceImage(false);
   }
 
-  function handleGenerateClick() {
+  const handleCropConfirm = async () => {
+    if (!completedCrop || !completedCrop.width || !completedCrop.height) {
+      setErrorMessage("Please make a selection to crop.");
+      return;
+    }
+    try {
+      setIsCropping(true);
+      const croppedImageBlob = await getCroppedImg(imgRef.current, completedCrop, false);
+      let croppedFile = new File([croppedImageBlob], selectedFile.name, {
+        type: "image/jpeg",
+        lastModified: Date.now(),
+      });
+      
+      if (enhanceImage) {
+        try {
+          const enhancedUrl = await apiEnhanceImage(croppedFile);
+          const enhancedBlob = await (await fetch(enhancedUrl)).blob();
+          croppedFile = new File([enhancedBlob], selectedFile.name, {
+            type: "image/jpeg",
+            lastModified: Date.now(),
+          });
+        } catch (enhanceErr) {
+          let errorText = "";
+          if (enhanceErr.response?.data instanceof Blob) {
+            try {
+              const text = await enhanceErr.response.data.text();
+              const json = JSON.parse(text);
+              errorText = json.error || "";
+            } catch (e) {
+              // ignore
+            }
+          } else if (enhanceErr.response?.data?.error) {
+            errorText = enhanceErr.response.data.error;
+          }
+
+          if (errorText.includes("QUALITY_REJECTED")) {
+            setErrorMessage(errorText.replace("QUALITY_REJECTED: ", ""));
+            setShowGuidelines(true);
+            setIsCropping(false);
+            return;
+          }
+          setErrorMessage("Failed to enhance image. Using standard crop.");
+        }
+      }
+      
+      setSelectedFile(croppedFile);
+      setPreviewUrl(URL.createObjectURL(croppedFile));
+      setStep("review");
+    } catch (e) {
+      setErrorMessage("Failed to crop image.");
+      console.error(e);
+    } finally {
+      setIsCropping(false);
+    }
+  };
+
+  async function handleGenerateClick() {
     if (!selectedFile) { setErrorMessage("Please select a photo first."); return; }
-    onGenerate(selectedFile);
+    try {
+      await onGenerate(selectedFile);
+    } catch (err) {
+      if (err.response?.data?.error?.includes("QUALITY_REJECTED")) {
+        setErrorMessage(err.response.data.error.replace("QUALITY_REJECTED: ", ""));
+        setShowGuidelines(true);
+      }
+    }
   }
 
   useEffect(() => {
@@ -80,7 +162,7 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
     >
       <div
         className="modal-panel"
-        style={{ maxWidth: "480px", display: "flex", flexDirection: "column" }}
+        style={{ maxWidth: "640px", display: "flex", flexDirection: "column" }}
       >
         {/* Drag handle */}
         <div style={{ display: "flex", justifyContent: "center", paddingTop: "0.85rem", flexShrink: 0 }}>
@@ -109,7 +191,7 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
                 fontFamily: "var(--font-serif)", fontStyle: "italic",
                 fontSize: "1.3rem", fontWeight: "600", color: "var(--color-text)", lineHeight: 1.2,
               }}>
-                {step === "upload" ? "Upload Your Photo" : "Review & Generate"}
+                {step === "upload" ? "Upload Your Photo" : step === "crop" ? "Crop Photo" : "Review & Generate"}
               </h2>
             </div>
 
@@ -372,6 +454,67 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
             </>
           )}
 
+          {/* ── STEP 1.5: Crop ── */}
+          {step === "crop" && (
+            <>
+              {/* Image Enhancement Checkbox */}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem", padding: "0.85rem", background: "var(--color-surface-2)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
+                <input
+                  type="checkbox"
+                  id="enhance-image-checkbox"
+                  checked={enhanceImage}
+                  onChange={(e) => setEnhanceImage(e.target.checked)}
+                  style={{ width: "18px", height: "18px", cursor: "pointer", accentColor: "var(--color-brand)" }}
+                />
+                <label htmlFor="enhance-image-checkbox" style={{ fontSize: "0.9rem", fontWeight: "600", color: "var(--color-text)", cursor: "pointer", userSelect: "none" }}>
+                  Enhance Image Quality <span style={{ color: "var(--color-text-muted)", fontSize: "0.75rem", fontWeight: "400" }}>(Optional - Sharpens blurry photos)</span>
+                </label>
+              </div>
+
+              <div style={{ position: "relative", width: "100%", maxHeight: "400px", background: "#1a1a1a", borderRadius: "var(--radius-md)", overflow: "hidden", marginBottom: "1.25rem", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <ReactCrop
+                  crop={crop}
+                  onChange={c => setCrop(c)}
+                  onComplete={c => setCompletedCrop(c)}
+                >
+                  <img
+                    ref={imgRef}
+                    src={previewUrl}
+                    style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain" }}
+                    alt="Crop preview"
+                  />
+                </ReactCrop>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginBottom: "1rem" }}>
+                <button
+                  onClick={handleReset}
+                  style={{
+                    background: "transparent", color: "var(--color-text)",
+                    border: "1px solid var(--color-border)", padding: "0.6rem 1.25rem",
+                    borderRadius: "var(--radius-md)", cursor: "pointer",
+                    fontWeight: "600", fontSize: "0.82rem"
+                  }}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleCropConfirm}
+                  disabled={isCropping}
+                  style={{
+                    background: "var(--color-brand)", color: "#fff", border: "none",
+                    padding: "0.6rem 1.25rem", borderRadius: "var(--radius-md)",
+                    cursor: isCropping ? "not-allowed" : "pointer",
+                    fontWeight: "600", fontSize: "0.82rem",
+                    opacity: isCropping ? 0.7 : 1
+                  }}
+                >
+                  {isCropping ? "Cropping..." : "Confirm Crop"}
+                </button>
+              </div>
+            </>
+          )}
+
           {/* ── STEP 2: Review ── */}
           {step === "review" && (
             <>
@@ -398,8 +541,31 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
                         borderRadius: "var(--radius-md)",
                         border: "1px solid var(--color-border)",
                         background: "var(--color-surface-2)",
+                        cursor: "pointer"
                       }}
+                      onClick={() => setIsExpanded(true)}
                     />
+                    
+                    {/* Expand Button */}
+                    <button
+                      onClick={() => setIsExpanded(true)}
+                      title="Expand cropped image"
+                      style={{
+                        position: "absolute", top: "8px", right: "8px",
+                        background: "rgba(0,0,0,0.5)", color: "#fff",
+                        border: "none", borderRadius: "var(--radius-xs)",
+                        padding: "0.3rem", display: "flex", alignItems: "center", justifyContent: "center",
+                        cursor: "pointer", backdropFilter: "blur(4px)",
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <polyline points="9 21 3 21 3 15"></polyline>
+                        <line x1="21" y1="3" x2="14" y2="10"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                      </svg>
+                    </button>
+
                     <button
                       onClick={handleReset}
                       title="Choose a different photo"
@@ -583,6 +749,43 @@ export default function TryOnModal({ product, onClose, onGenerate, isGenerating 
           )}
         </div>
       </div>
+      
+      {/* Full Screen Image Viewer */}
+      {isExpanded && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0, 0, 0, 0.9)", zIndex: 100000,
+          display: "flex", justifyContent: "center", alignItems: "center",
+          flexDirection: "column", padding: "2rem"
+        }}>
+          <button
+            onClick={() => setIsExpanded(false)}
+            style={{
+              position: "absolute", top: "20px", right: "20px",
+              background: "rgba(255,255,255,0.1)", border: "none", color: "white",
+              borderRadius: "50%", cursor: "pointer", padding: "0.6rem", display: "flex", alignItems: "center", justifyContent: "center"
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <img
+            src={previewUrl}
+            alt="Expanded crop"
+            style={{ maxWidth: "100%", maxHeight: "90vh", objectFit: "contain", borderRadius: "var(--radius-md)" }}
+          />
+        </div>
+      )}
+      
+      {/* Photo Guidelines Modal on Error */}
+      {showGuidelines && (
+        <PhotoGuidelines 
+          onClose={() => setShowGuidelines(false)} 
+          errorReason={errorMessage}
+        />
+      )}
     </div>
   );
 

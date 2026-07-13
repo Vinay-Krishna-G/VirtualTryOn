@@ -15,6 +15,7 @@ export default function GeneratedResultModal({
   const [view, setView] = useState("result"); // "result" | "compare"
   const [fullscreen, setFullscreen] = useState(false);
   const [shareMsg, setShareMsg] = useState("");
+  const [sliderPosition, setSliderPosition] = useState(50);
 
   async function handleDownload() {
     try {
@@ -218,66 +219,106 @@ export default function GeneratedResultModal({
             </div>
           )}
 
-          {/* Compare view — side by side */}
+          {/* Compare view — Slider */}
           {view === "compare" && (
             <div style={{ marginBottom: "1rem" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
-                <div>
-                  <p style={{
-                    fontSize: "0.6rem", fontWeight: "600", color: "var(--color-text-muted)",
-                    textTransform: "uppercase", letterSpacing: "0.09em",
-                    textAlign: "center", marginBottom: "0.5rem",
-                  }}>
-                    Original
-                  </p>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", padding: "0 4px" }}>
+                <p style={{ fontSize: "0.6rem", fontWeight: "600", color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.09em" }}>
+                  Original
+                </p>
+                <p style={{ fontSize: "0.6rem", fontWeight: "600", color: "var(--color-brand)", textTransform: "uppercase", letterSpacing: "0.09em" }}>
+                  Virtual Try-On
+                </p>
+              </div>
+              
+              <div 
+                style={{ 
+                  position: "relative", 
+                  width: "100%", 
+                  aspectRatio: "3/4", 
+                  borderRadius: "var(--radius-md)", 
+                  overflow: "hidden",
+                  border: "1px solid var(--color-border-brand)",
+                  userSelect: "none"
+                }}
+              >
+                {/* Bottom Image: Original */}
+                <img
+                  src={originalImageUrl}
+                  alt="Your original photo"
+                  style={{
+                    position: "absolute",
+                    top: 0, left: 0,
+                    width: "100%", height: "100%", objectFit: "cover",
+                    pointerEvents: "none"
+                  }}
+                />
+                
+                {/* Top Image: AI Result (clipped) */}
+                <div 
+                  style={{
+                    position: "absolute",
+                    top: 0, left: 0,
+                    width: "100%", height: "100%",
+                    clipPath: `inset(0 0 0 ${sliderPosition}%)`,
+                    pointerEvents: "none"
+                  }}
+                >
                   <img
-                    src={originalImageUrl}
-                    alt="Your original photo"
+                    src={resultImageUrl}
+                    alt="AI generated result"
                     style={{
-                      width: "100%", aspectRatio: "3/4", objectFit: "cover",
-                      borderRadius: "var(--radius-md)",
-                      border: "1px solid var(--color-border)",
+                      width: "100%", height: "100%", objectFit: "cover",
                     }}
                   />
                 </div>
-                <div>
-                  <p style={{
-                    fontSize: "0.6rem", fontWeight: "600", color: "var(--color-brand)",
-                    textTransform: "uppercase", letterSpacing: "0.09em",
-                    textAlign: "center", marginBottom: "0.5rem",
+
+                {/* Slider Thumb Line */}
+                <div 
+                  style={{
+                    position: "absolute",
+                    top: 0, bottom: 0,
+                    left: `${sliderPosition}%`,
+                    width: "2px",
+                    background: "#fff",
+                    boxShadow: "0 0 4px rgba(0,0,0,0.5)",
+                    transform: "translateX(-50%)",
+                    pointerEvents: "none",
+                    zIndex: 10
+                  }}
+                >
+                  <div style={{
+                    position: "absolute",
+                    top: "50%", left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    width: "26px", height: "26px",
+                    background: "#fff",
+                    borderRadius: "50%",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    gap: "2px"
                   }}>
-                    Virtual Try-On
-                  </p>
-                  <div style={{ position: "relative" }}>
-                    <img
-                      src={resultImageUrl}
-                      alt="AI generated result"
-                      style={{
-                        width: "100%", aspectRatio: "3/4", objectFit: "cover",
-                        borderRadius: "var(--radius-md)",
-                        border: "1px solid var(--color-border-brand)",
-                        boxShadow: "var(--shadow-gold)",
-                      }}
-                    />
-                    <button
-                      onClick={() => setFullscreen(true)}
-                      style={{
-                        position: "absolute", top: "8px", right: "8px",
-                        background: "rgba(0,0,0,0.65)", color: "#fff",
-                        border: "none", borderRadius: "50%",
-                        width: "26px", height: "26px",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        cursor: "pointer", backdropFilter: "blur(8px)",
-                      }}
-                      aria-label="View fullscreen"
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
-                        <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
-                      </svg>
-                    </button>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
                   </div>
                 </div>
+
+                {/* Invisible Range Input to control it */}
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={sliderPosition}
+                  onChange={(e) => setSliderPosition(e.target.value)}
+                  style={{
+                    position: "absolute",
+                    top: 0, left: 0,
+                    width: "100%", height: "100%",
+                    opacity: 0,
+                    cursor: "ew-resize",
+                    zIndex: 20
+                  }}
+                />
               </div>
             </div>
           )}

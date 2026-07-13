@@ -11,12 +11,19 @@
 import { products as mockProducts, getCategories as mockGetCategories } from "../mock/products";
 
 export async function getProducts() {
-  // Simulate network delay for realism in the prototype
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return mockProducts;
+  try {
+    const response = await fetch('/api/products');
+    if (!response.ok) throw new Error('Failed to fetch products');
+    const data = await response.json();
+    return data.products;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return [];
+  }
 }
 
 export async function getCategories() {
-  await new Promise((resolve) => setTimeout(resolve, 150));
-  return mockGetCategories();
+  const products = await getProducts();
+  const categories = new Set(products.map(p => p.category));
+  return Array.from(categories);
 }

@@ -32,6 +32,67 @@ const PYTHON_AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:80
 
 
 
+// ── Route: POST /api/generate/enhance ─────────────────────────────────────────
+router.post(
+  "/enhance",
+  uploadPersonImage.single("personImage"),
+  async (req, res) => {
+    const uploadedPersonImage = req.file;
+
+    if (!uploadedPersonImage) {
+      return res.status(400).json({
+        success: false,
+        error: "Person image is required. Please upload a photo.",
+      });
+    }
+
+    try {
+      const pythonFormData = new FormData();
+      pythonFormData.append("person_image", fs.createReadStream(uploadedPersonImage.path), {
+        filename: uploadedPersonImage.originalname,
+        contentType: uploadedPersonImage.mimetype,
+      });
+
+      const pythonResponse = await axios.post(
+        `${PYTHON_AI_SERVICE_URL}/api/try-on/enhance`,
+        pythonFormData,
+        {
+          headers: { ...pythonFormData.getHeaders() },
+          responseType: "arraybuffer", // We expect a raw image stream
+          timeout: 60000,
+        }
+      );
+
+      // Return the enhanced image bytes back to React
+      res.setHeader("Content-Type", "image/jpeg");
+      res.send(pythonResponse.data);
+    } catch (error) {
+      console.error("[Node Gateway] Error calling Python Enhance:", error.message);
+      
+      // Try to parse the JSON error returned by Python if it failed quality checks
+      let errorMsg = "Enhancement failed.";
+      if (error.response?.data) {
+        try {
+          // Because responseType is arraybuffer, we need to convert it back to string/json
+          const errorJson = JSON.parse(error.response.data.toString("utf8"));
+          if (errorJson.message) errorMsg = errorJson.message;
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+      
+      return res.status(error.response?.status || 500).json({
+        success: false,
+        error: errorMsg,
+      });
+    } finally {
+      if (uploadedPersonImage && fs.existsSync(uploadedPersonImage.path)) {
+        fs.unlinkSync(uploadedPersonImage.path);
+      }
+    }
+  }
+);
+
 // ── Route: POST /api/generate ─────────────────────────────────────────────────
 /**
  * POST /api/generate
@@ -154,9 +215,20 @@ router.post(
     } catch (error) {
       console.error("[Node Gateway] Error calling Python AI Service:", error.message);
       
-      return res.status(500).json({
+      let errorMsg = "AI generation failed. Please try again.";
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+           errorMsg = error.response.data;
+        } else if (error.response.data.message) {
+           errorMsg = error.response.data.message;
+        } else if (error.response.data.error) {
+           errorMsg = error.response.data.error;
+        }
+      }
+      
+      return res.status(error.response?.status || 500).json({
         success: false,
-        error: "AI generation failed. Please try again.",
+        error: errorMsg,
         detail: error.response?.data || error.message,
       });
     } finally {
