@@ -14,6 +14,25 @@ const NAV_ITEMS = [
     ),
   },
   {
+    id: "search",
+    label: "Search",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    ),
+  },
+  {
+    id: "wishlist",
+    label: "Saved",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+      </svg>
+    ),
+  },
+  {
     id: "cart",
     label: "Bag",
     icon: (
@@ -33,6 +52,14 @@ export default function BottomNavigation({ currentPage, onNavigate, theme, onTog
     if (itemId === "cart") {
       alert("Demo: Bag feature coming soon!");
       return;
+    }
+    if (itemId === "wishlist") {
+      alert("Demo: Saved items coming soon!");
+      return;
+    }
+    if (itemId === "search") {
+      // In a real app, this might open a search modal
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
     onNavigate(itemId);
   }

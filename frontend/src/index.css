@@ -22,6 +22,9 @@
   --color-glass:        rgba(255,255,255,0.03);
   --color-glass-border: rgba(255,255,255,0.06);
 
+  --color-secondary:    #9e7f6f;
+  --color-secondary-light: rgba(158,127,111,0.1);
+
   --color-text:         #f5f0ea;
   --color-text-2:       #c8c0b4;
   --color-text-muted:   #7a7269;
@@ -57,6 +60,9 @@
   --color-surface-3:    #eeebe5;
   --color-glass:        rgba(0,0,0,0.02);
   --color-glass-border: rgba(0,0,0,0.06);
+
+  --color-secondary:    #7a6358;
+  --color-secondary-light: rgba(122,99,88,0.08);
 
   --color-text:         #141210;
   --color-text-2:       #3d3730;
@@ -320,6 +326,23 @@ button { font-family: var(--font); cursor: pointer; }
   height: 1px;
   background: var(--color-border);
   width: 100%;
+}
+
+/* ── Utilities ── */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.snap-container {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.snap-item {
+  scroll-snap-align: start;
 }
 
 /* ── Responsive utilities ── */

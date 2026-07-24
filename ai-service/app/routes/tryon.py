@@ -34,11 +34,12 @@ from typing import Optional
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
 
-from app.config import settings
+from app.core.config import settings
 import asyncio
 from app.services.image_storage import get_image_url, save_temp_image
 from app.services.engines.fashn_engine import fashn_engine
 from app.services.pipeline.orchestrator import PreprocessingOrchestrator
+from app.services.category_detector import CategoryDetector
 
 logger = logging.getLogger(__name__)
 
@@ -122,26 +123,8 @@ async def generate_endpoint(
         product_id = garment_image.filename.rsplit(".", 1)[0]
 
     # Legacy endpoint doesn't send prompt metadata, so we generate a smart prompt here.
-    prod_lower = (product_id or "").lower()
-    if "shirt" in prod_lower:
-        category = "shirt"
-    elif "kurti" in prod_lower:
-        category = "kurti"
-    elif "kurta" in prod_lower:
-        category = "kurta"
-    elif "lehenga" in prod_lower:
-        category = "lehenga"
-    elif "suit" in prod_lower or "blazer" in prod_lower:
-        category = "suit"
-    elif "top" in prod_lower or "blouse" in prod_lower:
-        category = "top"
-    elif "jeans" in prod_lower or "pant" in prod_lower or "trouser" in prod_lower:
-        category = "jeans"
-    elif "outfit" in prod_lower or "set" in prod_lower or "co-ord" in prod_lower:
-        category = "outfit"
-    else:
-        category = "saree" # Default fallback
-        
+    category = CategoryDetector.detect_category(product_id or "")
+    
     base_prompt = "The garment must conform to the person's existing body. Never alter the person's body measurements or silhouette to fit the garment; instead, fit the garment to the person's original body."
     if category == "saree":
         smart_prompt = f"traditional indian saree drape, {base_prompt}"
@@ -222,25 +205,7 @@ async def tryon_json_endpoint(
     # Any specific user prompts can be passed via form data in the future
     category = product_category.strip() if product_category else "saree"
     
-    prod_lower = (product_id or category).lower()
-    if "shirt" in prod_lower:
-        inferred_cat = "shirt"
-    elif "kurti" in prod_lower:
-        inferred_cat = "kurti"
-    elif "kurta" in prod_lower:
-        inferred_cat = "kurta"
-    elif "lehenga" in prod_lower:
-        inferred_cat = "lehenga"
-    elif "suit" in prod_lower or "blazer" in prod_lower:
-        inferred_cat = "suit"
-    elif "top" in prod_lower or "blouse" in prod_lower:
-        inferred_cat = "top"
-    elif "jeans" in prod_lower or "pant" in prod_lower or "trouser" in prod_lower:
-        inferred_cat = "jeans"
-    elif "outfit" in prod_lower or "set" in prod_lower or "co-ord" in prod_lower:
-        inferred_cat = "outfit"
-    else:
-        inferred_cat = "saree"
+    inferred_cat = CategoryDetector.detect_category(product_id or category)
         
     base_prompt = "preserve original body shape, match exact skin tone, natural pose, realistic proportions. The garment must conform to the person's existing body. Never alter the person's body measurements or silhouette to fit the garment; instead, fit the garment to the person's original body."
     if inferred_cat == "saree":

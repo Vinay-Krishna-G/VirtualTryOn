@@ -1,14 +1,11 @@
 """
-app/config.py
+app/core/config/settings.py
 
-Centralised settings for the VirtualFit AI Service.
+Centralised runtime settings for the VirtualFit AI Service.
+NOTE: Secrets (API keys) are NOT stored here. They are managed by secrets_manager.py.
 
 All values can be overridden through environment variables or a .env file.
 Uses Pydantic BaseSettings so every field is type-validated at startup.
-
-Usage:
-    from app.config import settings
-    print(settings.GEMINI_API_KEY)
 """
 
 from typing import Optional
@@ -18,7 +15,6 @@ from pathlib import Path
 class Settings(BaseSettings):
     """Application-wide settings loaded from environment / .env file."""
 
-    FASHN_API_KEY: str = ""
     FASHN_MODEL: str = "tryon-max"
     FASHN_RESOLUTION: str = "1k"
     FASHN_GENERATION_MODE: str = "fast"
@@ -30,7 +26,6 @@ class Settings(BaseSettings):
     FASHN_RETURN_BASE64: bool = False
 
     # ── File storage ───────────────────────────────────────────────────────────
-    # Paths are relative to the ai-service root directory
     UPLOAD_FOLDER: str = "temp/uploads"
     OUTPUT_FOLDER: str = "temp/generated"
 
@@ -45,31 +40,17 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     # ── Gemini model ───────────────────────────────────────────────────────────
-    # gemini-2.5-flash-image supports image output (response_modalities=["IMAGE"])
-    # Other options: gemini-3.1-flash-image (latest), gemini-3-pro-image (highest quality)
     GEMINI_MODEL: str = "gemini-2.5-flash-image"
-
-    # Timeout (seconds) for a single Gemini API call
     GEMINI_TIMEOUT: int = 120
 
     # ── Mock mode ──────────────────────────────────────────────────────────────
-    # Set MOCK_AI=true in .env to skip Gemini entirely and return a test image.
-    # Use this to test the full pipeline (React → Node → FastAPI → display)
-    # without spending any API credits.
     MOCK_AI: bool = True
 
     # ── AI Provider ────────────────────────────────────────────────────────────
-    # Which AI backend to use for image generation.
-    # Options:
-    #   "fashn_api" — Official FASHN Try-On API (requires FASHN_API_KEY)
-    #   "gemini"    — Google Gemini image generation (requires paid plan)
-    #   "idmvton"   — IDM-VTON on HuggingFace Spaces (free, no API key needed)
+    # Options: "fashn_api", "gemini", "idmvton"
     AI_PROVIDER: str = "fashn_api"
 
-    # Optional token for HuggingFace (used by idmvton to bypass ZeroGPU limits)
-    HF_TOKEN: Optional[str] = None
-
-    # "?"? CV Pipeline Configuration "?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?
+    # ── CV Pipeline Configuration ──────────────────────────────────────────────
     QUALITY_THRESHOLD: float = 75.0
     ENABLE_ENHANCEMENT: bool = True
     ENABLE_CLAHE: bool = True

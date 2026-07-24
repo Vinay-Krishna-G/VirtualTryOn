@@ -26,7 +26,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.config import settings
+from app.core.config import settings
 from app.routes.tryon import router as tryon_router
 from app.utils.cleanup import cleanup_all_temp
 from app.services.engines.fashn_engine import fashn_engine

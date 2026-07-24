@@ -9,6 +9,7 @@ import ProductGrid from "../components/home/ProductGrid";
 export default function Home({ products, categories, onSelectProduct }) {
   const [activeGender, setActiveGender] = useState("Women");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const gridRef = useRef(null);
 
   function handleExplore() {
@@ -16,18 +17,29 @@ export default function Home({ products, categories, onSelectProduct }) {
   }
 
   const genderProducts = products.filter((p) => p.gender === activeGender);
-  const dynamicCategories = ["All", ...new Set(genderProducts.map((p) => p.category))];
+  
+  // Compute categories with counts
+  const categoryCounts = genderProducts.reduce((acc, p) => {
+    acc[p.category] = (acc[p.category] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const dynamicCategories = [
+    { name: "All", count: genderProducts.length },
+    ...Object.entries(categoryCounts).map(([name, count]) => ({ name, count }))
+  ];
+
   const filteredProducts = activeCategory === "All"
     ? genderProducts
     : genderProducts.filter((p) => p.category === activeCategory);
 
-  if (activeCategory !== "All" && !dynamicCategories.includes(activeCategory)) {
+  if (activeCategory !== "All" && !categoryCounts[activeCategory]) {
     setActiveCategory("All");
   }
 
   return (
     <div className="page-enter">
-      <div style={{ maxWidth: "var(--max-width)", margin: "0 auto", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "3rem" }}>
+      <div style={{ maxWidth: "var(--max-width)", margin: "0 auto", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "4.5rem" }}>
 
         {/* Hero */}
         <HeroBanner onExplore={handleExplore} />
@@ -60,11 +72,34 @@ export default function Home({ products, categories, onSelectProduct }) {
             ))}
           </div>
 
-          <CategoryScroller
-            categories={dynamicCategories}
-            activeCategory={activeCategory}
-            onSelect={setActiveCategory}
-          />
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+              <CategoryScroller
+                categories={dynamicCategories}
+                activeCategory={activeCategory}
+                onSelect={setActiveCategory}
+              />
+              <div style={{ position: "relative", minWidth: "240px" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }}>
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input 
+                  type="text" 
+                  placeholder="Search collection..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: "100%", padding: "0.6rem 1rem 0.6rem 2.2rem",
+                    background: "var(--color-surface)", border: "1px solid var(--color-border)",
+                    borderRadius: "var(--radius-full)", color: "var(--color-text)",
+                    fontSize: "0.85rem", outline: "none", transition: "border-color 0.2s"
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = "var(--color-brand)"}
+                  onBlur={(e) => e.target.style.borderColor = "var(--color-border)"}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Product Grid Section */}
@@ -93,7 +128,7 @@ export default function Home({ products, categories, onSelectProduct }) {
           <ProductGrid
             products={filteredProducts}
             activeCategory={activeCategory}
-            searchQuery=""
+            searchQuery={searchQuery}
             onSelectProduct={onSelectProduct}
           />
         </div>
@@ -167,24 +202,33 @@ export default function Home({ products, categories, onSelectProduct }) {
             </h2>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem" }}>
+          <div 
+            className="snap-container hide-scrollbar" 
+            style={{ 
+              display: "flex", gap: "1.5rem", overflowX: "auto", 
+              paddingBottom: "1rem", margin: "0 -1.5rem", padding: "0 1.5rem 1rem" 
+            }}
+          >
             {[
               { name: "Priya S.", review: "Tried it virtually, bought it instantly. The fit was perfect — no returns needed.", rating: 5, loc: "Mumbai" },
               { name: "Anjali M.", review: "Saved me from so many poor choices. This feature is a genuine game changer for online shopping.", rating: 5, loc: "Delhi" },
               { name: "Kavitha R.", review: "I was sceptical, but the AI preview was spot-on. Love the confidence it gives.", rating: 5, loc: "Bangalore" },
+              { name: "Neha D.", review: "The drape and colour accuracy is unbelievable. Felt like I was trying it in the store.", rating: 5, loc: "Pune" },
             ].map((t) => (
               <div
                 key={t.name}
+                className="snap-item"
                 style={{
                   background: "var(--color-surface)",
                   border: "1px solid var(--color-border)",
                   borderRadius: "var(--radius-md)",
-                  padding: "1.5rem",
+                  padding: "1.75rem",
+                  minWidth: "280px", maxWidth: "320px", flexShrink: 0,
                   transition: "border-color 0.2s, transform 0.25s, box-shadow 0.25s",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = "var(--color-border-brand)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.transform = "translateY(-4px)";
                   e.currentTarget.style.boxShadow = "var(--shadow-gold)";
                 }}
                 onMouseLeave={(e) => {
@@ -193,23 +237,23 @@ export default function Home({ products, categories, onSelectProduct }) {
                   e.currentTarget.style.boxShadow = "none";
                 }}
               >
-                <div style={{ display: "flex", gap: "2px", marginBottom: "0.85rem" }}>
+                <div style={{ display: "flex", gap: "3px", marginBottom: "1rem" }}>
                   {[1,2,3,4,5].map(i => (
-                    <svg key={i} width="12" height="12" viewBox="0 0 10 10" fill="var(--color-brand)">
+                    <svg key={i} width="14" height="14" viewBox="0 0 10 10" fill="var(--color-brand)">
                       <polygon points="5,1 6.18,3.86 9.33,4 7,5.86 7.63,9 5,7.5 2.37,9 3,5.86 0.67,4 3.82,3.86"/>
                     </svg>
                   ))}
                 </div>
                 <p style={{
-                  fontSize: "0.86rem", color: "var(--color-text-muted)",
-                  lineHeight: "1.7", marginBottom: "1.25rem",
+                  fontSize: "0.9rem", color: "var(--color-text-muted)",
+                  lineHeight: "1.8", marginBottom: "1.5rem",
                   fontStyle: "italic", fontFamily: "var(--font-serif)",
                 }}>
                   "{t.review}"
                 </p>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--color-text)" }}>{t.name}</span>
-                  <span style={{ fontSize: "0.68rem", color: "var(--color-text-muted)" }}>{t.loc}</span>
+                  <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--color-text)" }}>{t.name}</span>
+                  <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>{t.loc}</span>
                 </div>
               </div>
             ))}

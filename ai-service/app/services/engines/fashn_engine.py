@@ -10,7 +10,7 @@ import logging
 from PIL import Image
 from fastapi import HTTPException
 
-from app.config import settings
+from app.core.config import settings, secrets
 from app.services.engines.tryon_engine import TryOnEngine
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class FashnTryOnEngine(TryOnEngine):
     BASE_URL = "https://api.fashn.ai/v1"
     
     def __init__(self):
-        self.api_key = settings.FASHN_API_KEY
+        self.api_key = secrets.get("FASHN_API_KEY")
         if not self.api_key:
             raise ValueError("FASHN_API_KEY is not set in configuration.")
         # Persistent HTTP client to reuse connections

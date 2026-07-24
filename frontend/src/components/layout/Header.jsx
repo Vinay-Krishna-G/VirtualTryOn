@@ -144,6 +144,23 @@ export default function Header({ onNavigateHome, currentPage, theme, onToggleThe
           </button>
 
           <button
+            aria-label="Search"
+            style={{
+              background: "none", border: "none",
+              cursor: "pointer", color: "var(--color-text-muted)",
+              padding: "0.5rem", transition: "color 0.2s",
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </button>
+
+          <button
             aria-label="Shopping bag"
             onClick={() => alert("Demo: Bag feature!")}
             style={{

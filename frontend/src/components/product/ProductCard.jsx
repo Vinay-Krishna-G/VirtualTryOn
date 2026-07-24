@@ -49,13 +49,11 @@ export default function ProductCard({ product, onSelect }) {
           }}
         />
 
-        {/* Subtle gradient */}
+        {/* No dark gradient anymore for a cleaner look */}
         <div style={{
           position: "absolute", inset: 0,
-          background: hovered
-            ? "linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%)"
-            : "linear-gradient(to top, rgba(0,0,0,0.2) 0%, transparent 60%)",
-          transition: "background 0.35s ease",
+          background: "rgba(0,0,0,0.02)",
+          pointerEvents: "none"
         }} />
 
         {/* Discount badge */}
@@ -71,23 +69,25 @@ export default function ProductCard({ product, onSelect }) {
           </div>
         )}
 
-        {/* Try-On CTA — slides in on hover */}
+        {/* Try-On CTA — Subtle circle icon badge */}
         <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          padding: "0.75rem",
+          position: "absolute", bottom: "12px", right: "12px",
           opacity: hovered ? 1 : 0,
-          transform: hovered ? "translateY(0)" : "translateY(10px)",
+          transform: hovered ? "translateY(0) scale(1)" : "translateY(10px) scale(0.9)",
           transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
         }}>
           <div style={{
-            background: "var(--color-brand)",
-            color: "#fff", textAlign: "center",
-            padding: "0.6rem", borderRadius: "var(--radius-xs)",
-            fontSize: "0.62rem", fontWeight: "700",
-            letterSpacing: "0.1em", textTransform: "uppercase",
-            boxShadow: "0 4px 20px rgba(184,150,90,0.35)",
-          }}>
-            Virtual Try-On
+            background: "var(--color-surface)",
+            color: "var(--color-text)",
+            width: "32px", height: "32px",
+            borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "var(--shadow-card)",
+            border: "1px solid var(--color-border)"
+          }} title="Virtual Try-On">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
           </div>
         </div>
       </div>
@@ -122,18 +122,18 @@ export default function ProductCard({ product, onSelect }) {
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "baseline", gap: "0.4rem", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "0.88rem", fontWeight: "700", color: "var(--color-text)" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.25rem" }}>
+          <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "var(--color-text)", letterSpacing: "-0.01em" }}>
             {formatPrice(product.price)}
           </span>
           {product.originalPrice > product.price && (
-            <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", textDecoration: "line-through" }}>
+            <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", textDecoration: "line-through" }}>
               {formatPrice(product.originalPrice)}
             </span>
           )}
           {product.discount > 0 && (
-            <span style={{ fontSize: "0.62rem", fontWeight: "600", color: "var(--color-success)" }}>
-              {product.discount}% off
+            <span style={{ fontSize: "0.65rem", fontWeight: "600", color: "var(--color-danger)" }}>
+              -{product.discount}%
             </span>
           )}
         </div>

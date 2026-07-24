@@ -48,175 +48,164 @@ export default function HeroBanner({ onExplore }) {
       overflow: "hidden",
       position: "relative",
       background: "var(--color-surface)",
-      minHeight: "clamp(300px, 46vw, 520px)",
-      display: "flex",
-      alignItems: "center",
       border: "1px solid var(--color-border)",
+      display: "flex",
+      flexDirection: "column",
     }}>
-      {/* Background texture */}
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+      
+      {/* Container for split layout */}
+      <div className="hero-split-container">
+        
+        {/* Left Content Area */}
         <div style={{
-          position: "absolute", top: 0, right: 0,
-          width: "60%", height: "100%",
-          background: "linear-gradient(135deg, transparent 40%, rgba(184,150,90,0.04) 100%)",
-        }} />
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "radial-gradient(circle at 80% 50%, rgba(184,150,90,0.06) 0%, transparent 60%)",
-        }} />
-      </div>
-
-      {/* Left accent bar */}
-      <div style={{
-        position: "absolute", left: 0, top: "20%", bottom: "20%",
-        width: "3px",
-        background: "linear-gradient(to bottom, transparent, var(--color-brand), transparent)",
-        borderRadius: "0 2px 2px 0",
-      }} />
-
-      {/* Content */}
-      <div style={{
-        position: "relative", zIndex: 2,
-        padding: "clamp(2.5rem, 5vw, 5rem) clamp(2rem, 5vw, 5rem)",
-        maxWidth: "680px",
-        opacity: animating ? 0 : 1,
-        transform: animating ? "translateY(8px)" : "translateY(0)",
-        transition: "opacity 0.3s ease, transform 0.3s ease",
-      }}>
-        {/* Tag */}
-        <div style={{ marginBottom: "1.5rem" }}>
-          <span style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            fontSize: "0.65rem", fontWeight: "600",
-            color: "var(--color-brand)", textTransform: "uppercase", letterSpacing: "0.16em",
+          flex: "1 1 50%",
+          padding: "clamp(2.5rem, 5vw, 4rem) clamp(2rem, 5vw, 4rem)",
+          position: "relative", zIndex: 2,
+          display: "flex", flexDirection: "column", justifyContent: "center"
+        }}>
+          
+          <div style={{
+            opacity: animating ? 0 : 1,
+            transform: animating ? "translateY(8px)" : "translateY(0)",
+            transition: "opacity 0.3s ease, transform 0.3s ease",
+            maxWidth: "600px",
           }}>
-            <span style={{
-              width: "24px", height: "1px",
-              background: "var(--color-brand)", display: "inline-block",
-            }} />
-            {slide.tag}
-          </span>
-        </div>
-
-        {/* Headline */}
-        <h1 style={{
-          fontFamily: "var(--font-serif)",
-          color: "var(--color-text)",
-          fontSize: "clamp(2.4rem, 6vw, 4.5rem)",
-          fontWeight: "600",
-          lineHeight: "1.08",
-          letterSpacing: "-0.01em",
-          marginBottom: "1.25rem",
-          fontStyle: "italic",
-        }}>
-          {slide.headline}
-        </h1>
-
-        {/* Subtext */}
-        <p style={{
-          color: "var(--color-text-muted)",
-          fontSize: "clamp(0.88rem, 1.5vw, 1rem)",
-          lineHeight: "1.7",
-          marginBottom: "2.5rem",
-          maxWidth: "420px",
-          fontWeight: "400",
-        }}>
-          {slide.sub}
-        </p>
-
-        {/* CTAs */}
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
-          <button
-            onClick={onExplore}
-            style={{
-              background: "var(--color-brand)",
-              color: "#fff", border: "none",
-              padding: "0.8rem 2rem",
-              borderRadius: "var(--radius-sm)",
-              fontSize: "0.72rem", fontWeight: "600",
-              cursor: "pointer", textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              transition: "all 0.25s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "var(--color-brand-hover)";
-              e.currentTarget.style.boxShadow = "var(--shadow-gold)";
-              e.currentTarget.style.transform = "translateY(-1px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "var(--color-brand)";
-              e.currentTarget.style.boxShadow = "none";
-              e.currentTarget.style.transform = "translateY(0)";
-            }}
-          >
-            Explore Collection
-          </button>
-          <button
-            style={{
-              background: "transparent", color: "var(--color-text-2)",
-              border: "1px solid var(--color-border-hover)",
-              padding: "0.8rem 1.75rem",
-              borderRadius: "var(--radius-sm)",
-              fontSize: "0.72rem", fontWeight: "600",
-              cursor: "pointer", textTransform: "uppercase",
-              letterSpacing: "0.1em", transition: "all 0.25s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--color-brand)";
-              e.currentTarget.style.color = "var(--color-brand)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--color-border-hover)";
-              e.currentTarget.style.color = "var(--color-text-2)";
-            }}
-          >
-            Try On Now
-          </button>
-        </div>
-
-        {/* Stats */}
-        <div style={{
-          display: "flex", gap: "2.5rem", marginTop: "3rem",
-          paddingTop: "1.75rem",
-          borderTop: "1px solid var(--color-border)",
-        }}>
-          {[["50K+", "Happy Shoppers"], ["98%", "Fit Accuracy"], ["< 60s", "Generation"]].map(([num, label]) => (
-            <div key={label}>
-              <div style={{
-                fontFamily: "var(--font-serif)",
-                fontSize: "1.5rem", fontWeight: "600",
-                color: "var(--color-brand)", lineHeight: 1,
-              }}>{num}</div>
-              <div style={{
-                fontSize: "0.6rem", color: "var(--color-text-muted)",
-                fontWeight: "500", letterSpacing: "0.08em",
-                textTransform: "uppercase", marginTop: "0.3rem",
-              }}>{label}</div>
+            {/* Tag */}
+            <div style={{ marginBottom: "1.5rem" }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: "8px",
+                fontSize: "0.65rem", fontWeight: "600",
+                color: "var(--color-brand)", textTransform: "uppercase", letterSpacing: "0.16em",
+              }}>
+                <span style={{ width: "24px", height: "1px", background: "var(--color-brand)", display: "inline-block" }} />
+                {slide.tag}
+              </span>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Slide indicators */}
-      <div style={{
-        position: "absolute", bottom: "1.75rem", right: "1.75rem",
-        display: "flex", gap: "8px", zIndex: 3,
-      }}>
-        {HERO_SLIDES.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setActiveSlide(i)}
+            {/* Headline */}
+            <h1 style={{
+              fontFamily: "var(--font-serif)",
+              color: "var(--color-text)",
+              fontSize: "clamp(2.4rem, 5vw, 4rem)",
+              fontWeight: "600",
+              lineHeight: "1.08",
+              letterSpacing: "-0.01em",
+              marginBottom: "1.25rem",
+              fontStyle: "italic",
+            }}>
+              {slide.headline}
+            </h1>
+
+            {/* Subtext */}
+            <p style={{
+              color: "var(--color-text-muted)",
+              fontSize: "clamp(0.88rem, 1.2vw, 1rem)",
+              lineHeight: "1.7",
+              marginBottom: "2.5rem",
+              maxWidth: "420px",
+              fontWeight: "400",
+            }}>
+              {slide.sub}
+            </p>
+
+            {/* CTAs */}
+            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+              <button
+                onClick={onExplore}
+                style={{
+                  background: "var(--color-brand)",
+                  color: "#fff", border: "none",
+                  padding: "0.8rem 2rem",
+                  borderRadius: "var(--radius-sm)",
+                  fontSize: "0.72rem", fontWeight: "600",
+                  cursor: "pointer", textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  transition: "all 0.25s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--color-brand-hover)";
+                  e.currentTarget.style.boxShadow = "var(--shadow-gold)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "var(--color-brand)";
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                Explore Collection
+              </button>
+            </div>
+            
+            {/* Slide indicators inside content on desktop */}
+            <div style={{
+              display: "flex", gap: "8px", marginTop: "3rem",
+            }}>
+              {HERO_SLIDES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveSlide(i)}
+                  style={{
+                    width: i === activeSlide ? "32px" : "6px",
+                    height: "3px",
+                    borderRadius: "1.5px",
+                    background: i === activeSlide ? "var(--color-brand)" : "var(--color-border-hover)",
+                    border: "none", cursor: "pointer",
+                    transition: "all 0.35s ease", padding: 0,
+                  }}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+            
+          </div>
+        </div>
+
+        {/* Right Image Area */}
+        <div className="hero-img-container" style={{
+          flex: "1 1 50%",
+          position: "relative",
+          minHeight: "300px",
+          overflow: "hidden"
+        }}>
+          <img 
+            src="/hero_lifestyle.png" 
+            alt="Fashion editorial model" 
             style={{
-              width: i === activeSlide ? "28px" : "5px",
-              height: "2px",
-              borderRadius: "1px",
-              background: i === activeSlide ? "var(--color-brand)" : "var(--color-border-hover)",
-              border: "none", cursor: "pointer",
-              transition: "all 0.35s ease", padding: 0,
+              position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+              objectFit: "cover", objectPosition: "center",
             }}
           />
-        ))}
+          {/* Subtle gradient overlay to merge image with background */}
+          <div style={{
+            position: "absolute", top: 0, bottom: 0, left: 0, width: "30%",
+            background: "linear-gradient(to right, var(--color-surface) 0%, transparent 100%)",
+            opacity: 0.8
+          }} className="hero-gradient" />
+        </div>
       </div>
+      
+      {/* Responsive adjustments */}
+      <style>{`
+        .hero-split-container {
+          display: flex;
+          flex-direction: column-reverse;
+          position: relative;
+        }
+        @media (min-width: 900px) {
+          .hero-split-container {
+            flex-direction: row;
+          }
+          .hero-img-container { min-height: 540px !important; }
+        }
+        @media (max-width: 899px) {
+          .hero-gradient { 
+            width: 100% !important; height: 30% !important;
+            background: linear-gradient(to top, var(--color-surface) 0%, transparent 100%) !important;
+            top: auto !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import asyncio
 from app.services.engines.fashn_engine import fashn_engine
-from app.config import settings
+from app.core.config import settings
 
 async def test():
     settings.FASHN_API_KEY = "test"

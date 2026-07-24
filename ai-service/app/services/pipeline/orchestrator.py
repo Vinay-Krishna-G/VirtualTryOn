@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import time
 import logging
-from app.config import settings
+from app.core.config import settings
 from app.services.pipeline.models import PipelineContext, ValidationResult, QualityScore
 from app.services.pipeline.enhancer import ImageEnhancer
 from app.services.pipeline.quality_analyzer import QualityAnalyzer
